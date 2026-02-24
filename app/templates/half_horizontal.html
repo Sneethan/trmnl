@@ -1,0 +1,155 @@
+<style>
+  /* PID-specific styles for half-horizontal (800×240) */
+  .pid-header {
+    border-top: 4px solid var(--black);
+    padding: 8px 0 6px;
+    width: 100%;
+  }
+
+  .pid-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .pid-header-info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .pid-dest {
+    font-family: 'Inter', sans-serif;
+    font-size: 32px;
+    font-weight: 500;
+    color: var(--black);
+    letter-spacing: -0.5px;
+    line-height: 1.1;
+  }
+
+  .pid-meta {
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--gray-25, #555);
+    margin-top: 2px;
+  }
+
+  .pid-countdown {
+    background: var(--black);
+    color: var(--white);
+    padding: 8px 18px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    line-height: 1;
+    flex-shrink: 0;
+  }
+
+  .pid-countdown .time {
+    font-family: 'Inter', sans-serif;
+    font-size: 26px;
+    font-weight: 600;
+  }
+
+  .pid-countdown .period {
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 400;
+    margin-top: 3px;
+  }
+
+  /* Table */
+  .pid-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .pid-table th {
+    font-family: 'Inter', sans-serif;
+    text-align: left;
+    padding: 5px 8px;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--gray-30, #666);
+    border-bottom: 2px solid var(--gray-15, #333);
+  }
+
+  .pid-table th:last-child { text-align: right; }
+
+  .pid-table td {
+    font-family: 'Inter', sans-serif;
+    padding: 7px 8px;
+    font-size: 15px;
+    font-weight: 400;
+    color: var(--black);
+    border-bottom: 1px solid var(--gray-65, #ccc);
+    vertical-align: middle;
+  }
+
+  .pid-table td:last-child { text-align: right; }
+
+  .pid-badge {
+    background: var(--black);
+    color: var(--white);
+    padding: 3px 10px;
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    display: inline-block;
+    white-space: nowrap;
+  }
+</style>
+
+<div class="layout layout--col layout--stretch-x">
+  {% if departures.size > 0 %}
+  <div class="pid-header">
+    <div class="pid-header-row">
+      <div class="pid-header-info">
+        <div class="pid-dest">{{ departures[0].destination }}</div>
+        <div class="pid-meta">{% if departures[0].train_type == "Ltd Express" %}Ltd Express{% else %}Stops All Stations{% endif %} · Platform {{ departures[0].platform }}</div>
+      </div>
+      {% assign t = departures[0].estimated_time | split: ' ' %}
+      <div class="pid-countdown">
+        <span class="time">{{ t[0] }}</span>
+        <span class="period">{{ t[1] }}</span>
+      </div>
+    </div>
+  </div>
+
+  {% if departures.size > 1 %}
+  <div style="overflow:hidden;width:100%;flex:1;">
+    <table class="pid-table">
+      <thead>
+        <tr>
+          <th>Time</th>
+          <th>Destination</th>
+          <th>Type</th>
+          <th>Plat</th>
+          <th>Departs</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for dep in departures offset:1 %}
+        <tr>
+          <td>{{ dep.scheduled_time }}</td>
+          <td>{{ dep.destination }}</td>
+          <td>{{ dep.train_type }}</td>
+          <td>{{ dep.platform }}</td>
+          <td><span class="pid-badge">{{ dep.estimated_time }}</span></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+  {% endif %}
+</div>
+
+<div class="title_bar">
+  <img class="image" src="https://cdn.getminted.cc/transitvic_black.png" />
+  <span class="title">{{ station_name }}</span>
+  <span class="instance">Updated {{ updated_at }}</span>
+</div>

@@ -1,0 +1,258 @@
+<style>
+  /* PID-specific styles for half-vertical (400×480) */
+  .pid-header {
+    border-top: 4px solid var(--black);
+    padding: 10px 0 8px;
+    width: 100%;
+  }
+
+  .pid-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+
+  .pid-header-info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .pid-dest {
+    font-family: 'Inter', sans-serif;
+    font-size: 28px;
+    font-weight: 500;
+    color: var(--black);
+    letter-spacing: -0.5px;
+    line-height: 1.1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .pid-meta {
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--gray-25, #555);
+    margin-top: 2px;
+  }
+
+  .pid-countdown {
+    background: var(--black);
+    color: var(--white);
+    padding: 7px 12px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    line-height: 1;
+    flex-shrink: 0;
+    margin-left: 6px;
+  }
+
+  .pid-countdown .time {
+    font-family: 'Inter', sans-serif;
+    font-size: 22px;
+    font-weight: 600;
+  }
+
+  .pid-countdown .period {
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    font-weight: 400;
+    margin-top: 3px;
+  }
+
+  /* Stopping pattern — 2-column max */
+  .stopping-pattern {
+    display: flex;
+    width: 100%;
+    background: var(--gray-75, #f2f2f2);
+    border-top: 1px solid var(--gray-60, #bbb);
+    border-bottom: 1px solid var(--gray-60, #bbb);
+  }
+
+  .stop-col {
+    flex: 1;
+    padding: 3px 0;
+    min-width: 0;
+  }
+
+  .stop-col + .stop-col {
+    border-left: 2px solid var(--gray-50, #999);
+  }
+
+  .stop-track-cap {
+    height: 6px;
+    width: 2px;
+    background: var(--gray-25, #555);
+    margin-left: 11px;
+  }
+
+  .stop-row {
+    display: flex;
+    align-items: center;
+    min-height: 18px;
+  }
+
+  .stop-track {
+    width: 24px;
+    flex-shrink: 0;
+    position: relative;
+    align-self: stretch;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .stop-track-line {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 2px;
+    background: var(--gray-25, #555);
+  }
+
+  .stop-track-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--gray-25, #555);
+    position: relative;
+    z-index: 1;
+  }
+
+  .stop-name {
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--gray-15, #333);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding-right: 4px;
+  }
+
+  .stop-row.is-express .stop-track-line { background: var(--gray-60, #bbb); }
+  .stop-row.is-express .stop-track-dot { background: var(--gray-75, #f2f2f2); border: 2px solid var(--gray-60, #bbb); }
+  .stop-row.is-express .stop-name { color: var(--gray-50, #999); }
+
+  .stop-row.is-current { background: var(--gray-25, #555); }
+  .stop-row.is-current .stop-track-line { background: var(--white); }
+  .stop-row.is-current .stop-track-dot { background: var(--white); }
+  .stop-row.is-current .stop-name { color: var(--white); }
+
+  /* Table */
+  .pid-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .pid-table th {
+    font-family: 'Inter', sans-serif;
+    text-align: left;
+    padding: 5px 6px;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--gray-30, #666);
+    border-bottom: 2px solid var(--gray-15, #333);
+  }
+
+  .pid-table th:last-child { text-align: right; }
+
+  .pid-table td {
+    font-family: 'Inter', sans-serif;
+    padding: 7px 6px;
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--black);
+    border-bottom: 1px solid var(--gray-65, #ccc);
+    vertical-align: middle;
+  }
+
+  .pid-table td:last-child { text-align: right; }
+
+  .pid-badge {
+    background: var(--black);
+    color: var(--white);
+    padding: 3px 8px;
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    display: inline-block;
+    white-space: nowrap;
+  }
+</style>
+
+<div class="layout layout--col layout--stretch-x">
+  {% if departures.size > 0 %}
+  <div class="pid-header">
+    <div class="pid-header-row">
+      <div class="pid-header-info">
+        <div class="pid-dest">{{ departures[0].destination }}</div>
+        <div class="pid-meta">{% if departures[0].train_type == "Ltd Express" %}Ltd Express{% else %}Stops All{% endif %} · Plat {{ departures[0].platform }}</div>
+      </div>
+      {% assign t = departures[0].estimated_time | split: ' ' %}
+      <div class="pid-countdown">
+        <span class="time">{{ t[0] }}</span>
+        <span class="period">{{ t[1] }}</span>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  {% if stop_columns.size > 0 %}
+  <div class="stopping-pattern">
+    {% for column in stop_columns limit:2 %}
+    <div class="stop-col">
+      <div class="stop-track-cap"></div>
+      {% for stop in column %}
+      <div class="stop-row {% if stop.is_current %}is-current{% elsif stop.is_express %}is-express{% endif %}">
+        <div class="stop-track">
+          <div class="stop-track-line"></div>
+          <div class="stop-track-dot"></div>
+        </div>
+        <span class="stop-name">{{ stop.name }}</span>
+      </div>
+      {% endfor %}
+      <div class="stop-track-cap"></div>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  {% if departures.size > 1 %}
+  <div style="overflow:hidden;width:100%;flex:1;">
+    <table class="pid-table">
+      <thead>
+        <tr>
+          <th>Time</th>
+          <th>Dest</th>
+          <th>Plat</th>
+          <th>Departs</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for dep in departures offset:1 %}
+        <tr>
+          <td>{{ dep.scheduled_time }}</td>
+          <td>{{ dep.destination }}</td>
+          <td>{{ dep.platform }}</td>
+          <td><span class="pid-badge">{{ dep.estimated_time }}</span></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+</div>
+
+<div class="title_bar">
+  <img class="image" src="https://cdn.getminted.cc/transitvic_black.png" />
+  <span class="title">{{ station_name }}</span>
+  <span class="instance">Updated {{ updated_at }}</span>
+</div>

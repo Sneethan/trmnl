@@ -1,0 +1,24 @@
+# Credentials and secrets
+credentials.md
+.env
+*.env
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+env/
+
+# Claude Code local settings
+.claude/
+
+# Dev artifacts
+response.json
+stops_response.md
+
+# Misc
+nul
+*.log
+.DS_Store

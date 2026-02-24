@@ -1,0 +1,178 @@
+<style>
+  /* PID-specific styles for quadrant with stopping pattern (400×240) */
+  .pid-header {
+    border-top: 3px solid var(--black);
+    padding: 5px 0 4px;
+    width: 100%;
+  }
+
+  .pid-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .pid-header-info {
+    flex: 1;
+    min-width: 0;
+    padding-right: 6px;
+  }
+
+  .pid-dest {
+    font-family: 'Inter', sans-serif;
+    font-size: 20px;
+    font-weight: 500;
+    color: var(--black);
+    letter-spacing: -0.5px;
+    line-height: 1.1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .pid-meta {
+    font-family: 'Inter', sans-serif;
+    font-size: 10px;
+    font-weight: 400;
+    color: var(--gray-25, #555);
+    margin-top: 1px;
+  }
+
+  .pid-countdown {
+    background: var(--black);
+    color: var(--white);
+    padding: 4px 9px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    line-height: 1;
+    flex-shrink: 0;
+  }
+
+  .pid-countdown .time {
+    font-family: 'Inter', sans-serif;
+    font-size: 17px;
+    font-weight: 600;
+  }
+
+  .pid-countdown .period {
+    font-family: 'Inter', sans-serif;
+    font-size: 10px;
+    font-weight: 400;
+    margin-top: 2px;
+  }
+
+  /* Single-column stopping pattern */
+  .stopping-pattern {
+    flex: 1;
+    width: 100%;
+    background: var(--gray-75, #f2f2f2);
+    border-top: 1px solid var(--gray-60, #bbb);
+    border-bottom: 1px solid var(--gray-60, #bbb);
+    overflow: hidden;
+    padding: 3px 0;
+  }
+
+  .stop-track-cap {
+    height: 6px;
+    width: 2px;
+    background: var(--gray-25, #555);
+    margin-left: 11px;
+  }
+
+  .stop-row {
+    display: flex;
+    align-items: center;
+    min-height: 19px;
+  }
+
+  .stop-track {
+    width: 24px;
+    flex-shrink: 0;
+    position: relative;
+    align-self: stretch;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .stop-track-line {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 2px;
+    background: var(--gray-25, #555);
+  }
+
+  .stop-track-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--gray-25, #555);
+    position: relative;
+    z-index: 1;
+  }
+
+  .stop-name {
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--gray-15, #333);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding-right: 4px;
+  }
+
+  .stop-row.is-express .stop-track-line { background: var(--gray-60, #bbb); }
+  .stop-row.is-express .stop-track-dot { background: var(--gray-75, #f2f2f2); border: 2px solid var(--gray-60, #bbb); }
+  .stop-row.is-express .stop-name { color: var(--gray-50, #999); }
+
+  .stop-row.is-current { background: var(--gray-25, #555); }
+  .stop-row.is-current .stop-track-line { background: var(--white); }
+  .stop-row.is-current .stop-track-dot { background: var(--white); }
+  .stop-row.is-current .stop-name { color: var(--white); }
+</style>
+
+<div class="layout layout--col layout--stretch-x">
+  {% if departures.size > 0 %}
+  <div class="pid-header">
+    <div class="pid-header-row">
+      <div class="pid-header-info">
+        <div class="pid-dest">{{ departures[0].destination }}</div>
+        <div class="pid-meta">{% if departures[0].train_type == "Ltd Express" %}Ltd Express{% else %}Stops All{% endif %} · Plat {{ departures[0].platform }}</div>
+      </div>
+      {% assign t = departures[0].estimated_time | split: ' ' %}
+      <div class="pid-countdown">
+        <span class="time">{{ t[0] }}</span>
+        <span class="period">{{ t[1] }}</span>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  {% if stop_columns.size > 0 %}
+  <div class="stopping-pattern">
+    <div class="stop-track-cap"></div>
+    {% for stop in stop_columns[0] %}
+    <div class="stop-row {% if stop.is_current %}is-current{% elsif stop.is_express %}is-express{% endif %}">
+      <div class="stop-track">
+        <div class="stop-track-line"></div>
+        <div class="stop-track-dot"></div>
+      </div>
+      <span class="stop-name">{{ stop.name }}</span>
+    </div>
+    {% endfor %}
+    <div class="stop-track-cap"></div>
+  </div>
+  {% endif %}
+</div>
+
+<div class="title_bar">
+  <img class="image" src="https://cdn.getminted.cc/transitvic_black.png" />
+  <span class="title">{{ station_name }}</span>
+  <span class="instance">Updated {{ updated_at }}</span>
+</div>
