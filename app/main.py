@@ -163,6 +163,7 @@ async def install(
 async def install_success(request: Request):
     """Webhook: TRMNL sends user info after successful install."""
     body = await request.json()
+    print(f"[install/success] payload: {body}")
     uuid = body.get("uuid")
     access_token = body.get("access_token", "")
     if not uuid:
@@ -229,7 +230,9 @@ async def trmnl_markup(request: Request):
 async def manage_page(uuid: str = Query(...)):
     user = await db.get_user(uuid)
     if not user:
-        return HTMLResponse("<h1>User not found</h1>", status_code=404)
+        # Auto-create user on first manage visit (webhook may not have arrived yet)
+        await db.create_user(uuid=uuid, access_token="")
+        user = await db.get_user(uuid)
 
     template = jinja_env.get_template("manage.html")
     return template.render(
