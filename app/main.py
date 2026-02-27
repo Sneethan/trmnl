@@ -146,7 +146,7 @@ async def install(
     """Browser redirect from TRMNL with auth code; exchange for token and redirect back."""
     async with httpx.AsyncClient() as client:
         resp = await client.post(
-            "https://usetrmnl.com/oauth/token",
+            "https://trmnl.com/oauth/token",
             json={
                 "grant_type": "authorization_code",
                 "client_id": settings.trmnl_client_id,
@@ -161,11 +161,16 @@ async def install(
 
 @app.post("/install/success")
 async def install_success(request: Request):
-    """Webhook: TRMNL sends user info after successful install."""
+    """Webhook: TRMNL sends user info after successful install.
+
+    Payload is nested under "user" key:
+    {"user": {"uuid": "...", "name": "...", "plugin_setting_id": 123, ...}}
+    """
     body = await request.json()
     print(f"[install/success] payload: {body}")
-    uuid = body.get("uuid")
-    access_token = body.get("access_token", "")
+
+    user_data = body.get("user", {})
+    uuid = user_data.get("uuid")
     if not uuid:
         return JSONResponse({"error": "Missing uuid"}, status_code=400)
 
@@ -173,11 +178,11 @@ async def install_success(request: Request):
     if not existing:
         await db.create_user(
             uuid=uuid,
-            access_token=access_token,
-            plugin_setting_id=body.get("plugin_setting_id"),
-            user_name=body.get("user_name"),
-            user_email=body.get("user_email"),
-            time_zone=body.get("time_zone"),
+            access_token=request.headers.get("authorization", "").removeprefix("Bearer "),
+            plugin_setting_id=user_data.get("plugin_setting_id"),
+            user_name=user_data.get("name"),
+            user_email=user_data.get("email"),
+            time_zone=user_data.get("time_zone_iana") or user_data.get("time_zone"),
         )
 
     return {"status": "ok"}
@@ -187,9 +192,12 @@ async def install_success(request: Request):
 
 @app.post("/uninstall")
 async def uninstall(request: Request):
-    """Webhook: TRMNL notifies us a user uninstalled."""
+    """Webhook: TRMNL notifies us a user uninstalled.
+
+    Payload: {"user_uuid": "uuid-of-the-user"}
+    """
     body = await request.json()
-    uuid = body.get("uuid")
+    uuid = body.get("user_uuid")
     if uuid:
         await db.delete_user(uuid)
     return {"status": "ok"}
@@ -199,11 +207,25 @@ async def uninstall(request: Request):
 
 @app.post("/trmnl/markup")
 async def trmnl_markup(request: Request):
-    """TRMNL requests markup for a user's display."""
-    body = await request.json()
-    uuid = body.get("uuid")
+    """TRMNL requests markup for a user's display.
+
+    TRMNL sends application/x-www-form-urlencoded with user_uuid field.
+    Response must use keys: markup, markup_half_horizontal, markup_half_vertical, markup_quadrant.
+    """
+    # TRMNL sends form-encoded data, not JSON
+    form = await request.form()
+    uuid = form.get("user_uuid")
+
     if not uuid:
-        return JSONResponse({"error": "Missing uuid"}, status_code=400)
+        # Fallback: try JSON body in case of testing
+        try:
+            body = await request.json()
+            uuid = body.get("user_uuid") or body.get("uuid")
+        except Exception:
+            pass
+
+    if not uuid:
+        return JSONResponse({"error": "Missing user_uuid"}, status_code=400)
 
     user = await db.get_user(uuid)
     if not user:
@@ -216,12 +238,20 @@ async def trmnl_markup(request: Request):
     data = await fetch_departure_data(stop_id=stop_id, platform_numbers=platform_numbers)
     data["station_name"] = station_name
 
-    markup = {}
-    for layout in ("full", "half_horizontal", "half_vertical", "quadrant"):
-        template = jinja_env.get_template(f"{layout}.html")
-        markup[layout] = template.render(**data)
+    # TRMNL expects these exact keys
+    layout_map = {
+        "markup": "full",
+        "markup_half_horizontal": "half_horizontal",
+        "markup_half_vertical": "half_vertical",
+        "markup_quadrant": "quadrant",
+    }
 
-    return markup
+    result = {}
+    for response_key, template_name in layout_map.items():
+        template = jinja_env.get_template(f"{template_name}.html")
+        result[response_key] = template.render(**data)
+
+    return result
 
 
 # ── Settings page ────────────────────────────────────────────────────────────
