@@ -6,51 +6,193 @@
   <title>Transit Victoria — Settings</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Inter', system-ui, sans-serif; background: #f5f5f5; color: #111; }
-    .wrap { max-width: 480px; margin: 40px auto; padding: 0 16px; }
-    h1 { font-size: 22px; font-weight: 600; margin-bottom: 4px; }
-    .subtitle { font-size: 14px; color: #666; margin-bottom: 24px; }
-    .card { background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 24px; }
-    label { display: block; font-size: 13px; font-weight: 600; color: #333; margin-bottom: 6px; }
-    .hint { font-size: 12px; color: #888; margin-bottom: 16px; }
-    input[type="text"] {
-      width: 100%; padding: 10px 12px; border: 1px solid #ccc; border-radius: 6px;
-      font-size: 15px; font-family: inherit; outline: none;
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background: rgb(21 21 21);
+      color: #e0e0e0;
+      min-height: 100vh;
     }
-    input[type="text"]:focus { border-color: #111; }
+
+    /* Top bar */
+    .topbar {
+      background:rgb(21 21 21);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .topbar-logo {
+      width: 28px;
+      height: 28px;
+      background: #e74c3c;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 14px;
+      color: #fff;
+    }
+    .topbar-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: #fff;
+    }
+
+    .wrap { max-width: 520px; margin: 32px auto; padding: 0 16px; }
+
+    h1 { font-size: 24px; font-weight: 600; color: #fff; margin-bottom: 4px; }
+    .subtitle { font-size: 14px; color: rgb(143 143 143); margin-bottom: 28px; }
+
+    .card {
+      background: rgb(24 24 24);
+      border: 1px solid rgb(91 91 91);
+      border-radius: 10px;
+      padding: 28px;
+    }
+
+    label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: rgb(143 143 143);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+    }
+
+    .hint { font-size: 12px; color: rgb(143 143 143); margin-top: 6px; margin-bottom: 16px; }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 10px 14px;
+      background: rgb(21 21 21);
+      border: 1px solid rgb(91 91 91);
+      border-radius: 8px;
+      font-size: 15px;
+      font-family: inherit;
+      color: #e0e0e0;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    input[type="text"]::placeholder { color: rgb(143 143 143); }
+    input[type="text"]:focus { border-color: #f96527; }
+
+    /* Search dropdown */
     .search-results {
-      border: 1px solid #ddd; border-radius: 6px; margin-top: 4px; max-height: 200px;
-      overflow-y: auto; display: none; background: #fff;
+      border: 1px solid rgb(91 91 91);
+      border-radius: 8px;
+      margin-top: 4px;
+      max-height: 220px;
+      overflow-y: auto;
+      display: none;
+      background: rgb(21 21 21);
     }
     .search-results.open { display: block; }
     .search-result {
-      padding: 10px 12px; cursor: pointer; font-size: 14px; border-bottom: 1px solid #eee;
+      padding: 10px 14px;
+      cursor: pointer;
+      font-size: 14px;
+      color: #e0e0e0;
+      border-bottom: 1px solid #1a1a2e;
+      transition: background 0.1s;
     }
     .search-result:last-child { border-bottom: none; }
-    .search-result:hover { background: #f0f0f0; }
-    .search-result .stop-id { font-size: 12px; color: #888; }
-    .current { background: #f9f9f9; border: 1px solid #eee; border-radius: 6px; padding: 12px; margin-bottom: 16px; }
-    .current-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: #888; margin-bottom: 4px; }
-    .current-value { font-size: 16px; font-weight: 500; }
-    .field { margin-bottom: 16px; }
-    .btn {
-      display: inline-block; padding: 10px 24px; background: #111; color: #fff;
-      border: none; border-radius: 6px; font-size: 15px; font-weight: 500;
-      cursor: pointer; font-family: inherit;
+    .search-result:hover { background: rgb(30 30 30); }
+    .search-result .stop-id { font-size: 11px; color: rgb(143 143 143); margin-left: 6px; }
+
+    /* Current station badge */
+    .current {
+      background: rgb(21 21 21);
+      border: 1px solid rgb(91 91 91);
+      border-radius: 8px;
+      padding: 14px 16px;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
     }
-    .btn:hover { background: #333; }
-    .btn-row { margin-top: 20px; display: flex; align-items: center; gap: 16px; }
-    .back-link { font-size: 14px; color: #666; text-decoration: none; }
-    .back-link:hover { color: #111; }
-    .msg { padding: 10px 12px; border-radius: 6px; margin-bottom: 16px; font-size: 14px; }
-    .msg-ok { background: #e6f9e6; color: #1a7a1a; }
-    .msg-err { background: #fde8e8; color: #991b1b; }
+    .current-icon {
+      width: 40px;
+      height: 40px;
+      background: #f96527;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .current-icon svg { width: 20px; height: 20px; fill: #fff; }
+    .current-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: rgb(143 143 143);
+      margin-bottom: 2px;
+    }
+    .current-value { font-size: 16px; font-weight: 600; color: #fff; }
+
+    .field { margin-bottom: 20px; }
+
+    /* Button */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 24px;
+      background: #f96527;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+      transition: background 0.15s;
+    }
+    .btn:hover { background: #d15019; }
+
+    .btn-row {
+      margin-top: 24px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .back-link {
+      font-size: 13px;
+      color: #8888aa;
+      text-decoration: none;
+      transition: color 0.15s;
+    }
+    .back-link:hover { color: #fff; }
+
+    /* Status messages */
+    .msg {
+      padding: 12px 16px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      font-size: 14px;
+      font-weight: 500;
+    }
+    .msg-ok { background: #0d2818; color: #4ade80; border: 1px solid #166534; }
+    .msg-err { background: #2d0f0f; color: #f87171; border: 1px solid #7f1d1d; }
+
+    /* Scrollbar */
+    .search-results::-webkit-scrollbar { width: 6px; }
+    .search-results::-webkit-scrollbar-track { background: transparent; }
+    .search-results::-webkit-scrollbar-thumb { background: #2a2a4a; border-radius: 3px; }
   </style>
 </head>
 <body>
+  <div class="topbar">
+    <div class="topbar-logo">T</div>
+    <span class="topbar-title">Transit Victoria</span>
+  </div>
+
   <div class="wrap">
-    <h1>Transit Victoria</h1>
-    <p class="subtitle">Configure your TRMNL train departure display</p>
+    <h1>Settings</h1>
+    <p class="subtitle">Configure your train departure display</p>
 
     {% if message %}
     <div class="msg {{ 'msg-ok' if message_type == 'success' else 'msg-err' }}">{{ message }}</div>
@@ -58,8 +200,13 @@
 
     <div class="card">
       <div class="current">
-        <div class="current-label">Current station</div>
-        <div class="current-value">{{ station_name }} {% if platform_numbers %}(Platforms {{ platform_numbers }}){% endif %}</div>
+        <div class="current-icon">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 2C8 2 4 3.5 4 7v9.5C4 18.43 5.57 20 7.5 20L6 21.5v.5h2l2-2h4l2 2h2v-.5L16.5 20c1.93 0 3.5-1.57 3.5-3.5V7c0-3.5-4-5-8-5zM7.5 17c-.83 0-1.5-.67-1.5-1.5S6.67 14 7.5 14s1.5.67 1.5 1.5S8.33 17 7.5 17zm3.5-6H6V7h5v4zm2 0V7h5v4h-5zm3.5 6c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg>
+        </div>
+        <div>
+          <div class="current-label">Current station</div>
+          <div class="current-value">{{ station_name }}{% if platform_numbers %} <span style="font-weight:400;color:rgb(143 143 143);">Plat {{ platform_numbers }}</span>{% endif %}</div>
+        </div>
       </div>
 
       <form method="POST" action="/manage/save" id="settings-form">
@@ -74,9 +221,9 @@
         </div>
 
         <div class="field">
-          <label for="platform_numbers">Platform filter (optional)</label>
+          <label for="platform_numbers">Platform filter</label>
           <input type="text" name="platform_numbers" id="platform_numbers" value="{{ platform_numbers or '' }}" placeholder="e.g. 1,2">
-          <p class="hint">Comma-separated platform numbers. Leave blank for all platforms.</p>
+          <p class="hint">Comma-separated. Leave blank for all platforms.</p>
         </div>
 
         <div class="btn-row">
@@ -108,11 +255,11 @@
         const res = await fetch('/api/stations/search?q=' + encodeURIComponent(q));
         const data = await res.json();
         if (!data.stops || data.stops.length === 0) {
-          resultsDiv.innerHTML = '<div class="search-result">No stations found</div>';
+          resultsDiv.innerHTML = '<div class="search-result" style="color:#6666888;">No stations found</div>';
         } else {
           resultsDiv.innerHTML = data.stops.map(s =>
             '<div class="search-result" data-id="' + s.stop_id + '" data-name="' + s.stop_name.replace(/"/g, '&quot;') + '">'
-            + s.stop_name + ' <span class="stop-id">#' + s.stop_id + '</span></div>'
+            + s.stop_name + '<span class="stop-id">#' + s.stop_id + '</span></div>'
           ).join('');
           resultsDiv.querySelectorAll('.search-result').forEach(el => {
             el.addEventListener('click', () => selectStation(el));
@@ -120,17 +267,15 @@
         }
         resultsDiv.classList.add('open');
       } catch (e) {
-        resultsDiv.innerHTML = '<div class="search-result">Search failed</div>';
+        resultsDiv.innerHTML = '<div class="search-result" style="color:#f87171;">Search failed</div>';
         resultsDiv.classList.add('open');
       }
     }
 
     function selectStation(el) {
-      const id = el.dataset.id;
-      const name = el.dataset.name;
-      stopIdInput.value = id;
-      stationNameInput.value = name;
-      searchInput.value = name;
+      stopIdInput.value = el.dataset.id;
+      stationNameInput.value = el.dataset.name;
+      searchInput.value = el.dataset.name;
       resultsDiv.classList.remove('open');
     }
 

@@ -2,7 +2,7 @@ import hashlib
 import re
 import hmac
 from datetime import datetime, timezone
-from urllib.parse import urlencode
+from urllib.parse import quote, urlencode
 
 import httpx
 
@@ -134,7 +134,7 @@ class PTVClient:
 
     async def search_stops(self, term: str, route_type: int = 0) -> list[dict]:
         """Search for stops by name, filtered to a route type."""
-        path = f"/v3/search/{term}"
+        path = f"/v3/search/{quote(term)}"
         params = {"route_types": route_type}
         full_path = f"{path}?{urlencode(params, doseq=True)}"
 
