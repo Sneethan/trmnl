@@ -138,14 +138,12 @@ async def manual_refresh():
 
 # ── OAuth install flow ───────────────────────────────────────────────────────
 
-@app.post("/install")
-async def install(request: Request):
-    """TRMNL sends an authorization code; exchange it for an access token."""
-    body = await request.json()
-    code = body.get("code")
-    if not code:
-        return JSONResponse({"error": "Missing code"}, status_code=400)
-
+@app.get("/install")
+async def install(
+    code: str = Query(...),
+    installation_callback_url: str = Query(...),
+):
+    """Browser redirect from TRMNL with auth code; exchange for token and redirect back."""
     async with httpx.AsyncClient() as client:
         resp = await client.post(
             "https://usetrmnl.com/oauth/token",
@@ -157,9 +155,8 @@ async def install(request: Request):
             },
         )
         resp.raise_for_status()
-        token_data = resp.json()
 
-    return {"access_token": token_data.get("access_token")}
+    return RedirectResponse(url=installation_callback_url, status_code=302)
 
 
 @app.post("/install/success")
