@@ -1,6 +1,7 @@
 import os
 from contextlib import asynccontextmanager
-from datetime import datetime
+from datetime import datetime, timezone
+from zoneinfo import ZoneInfo
 
 import httpx
 import jinja2
@@ -65,7 +66,7 @@ async def fetch_departure_data(
             for d in departures
         ],
         "stop_columns": stop_columns,
-        "updated_at": datetime.now().strftime("%I:%M %p").lstrip("0").lower(),
+        "updated_at": datetime.now(timezone.utc).astimezone(ZoneInfo("Australia/Melbourne")).strftime("%I:%M %p").lstrip("0").lower(),
     }
 
 

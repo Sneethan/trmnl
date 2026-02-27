@@ -3,8 +3,11 @@ import re
 import hmac
 from datetime import datetime, timezone
 from urllib.parse import quote, urlencode
+from zoneinfo import ZoneInfo
 
 import httpx
+
+MELBOURNE_TZ = ZoneInfo("Australia/Melbourne")
 
 
 def _clean_stop_name(name: str) -> str:
@@ -82,8 +85,8 @@ class PTVClient:
 
             departures.append({
                 "destination": run.get("destination_name", direction.get("direction_name", "Unknown")),
-                "scheduled_time": scheduled.astimezone().strftime("%I:%M %p").lstrip("0").lower(),
-                "estimated_time": departure_time.astimezone().strftime("%I:%M %p").lstrip("0").lower(),
+                "scheduled_time": scheduled.astimezone(MELBOURNE_TZ).strftime("%I:%M %p").lstrip("0").lower(),
+                "estimated_time": departure_time.astimezone(MELBOURNE_TZ).strftime("%I:%M %p").lstrip("0").lower(),
                 "minutes_until": max(0, minutes_until),
                 "platform": dep.get("platform_number", ""),
                 "is_express": run.get("express_stop_count", 0) > 0,
@@ -151,9 +154,13 @@ class PTVClient:
         ]
 
     async def get_stopping_pattern(self, run_ref: str, current_stop_id: int, route_type: int = 0) -> list[dict]:
-        """Get stopping pattern for a specific run, including skipped (express) stops."""
+        """Get stopping pattern for a specific run.
+
+        Uses the pattern endpoint WITHOUT include_skipped_stops, then cross-references
+        with route stops to identify express (skipped) stations.
+        """
         path = f"/v3/pattern/run/{run_ref}/route_type/{route_type}"
-        params = {"expand": ["stop"], "include_skipped_stops": "true"}
+        params = {"expand": ["stop", "route", "direction"]}
         query = urlencode(params, doseq=True)
         full_path = f"{path}?{query}"
 
@@ -170,7 +177,8 @@ class PTVClient:
             info = stops_lookup.get(str(stop_id), {})
             return _clean_stop_name(info.get("stop_name", "Unknown"))
 
-        result = []
+        # Collect stops the train actually calls at (from current stop onward)
+        calling_stops = []
         found_current = False
 
         for dep in data.get("departures", []):
@@ -178,29 +186,45 @@ class PTVClient:
             is_current = sid == current_stop_id
             if is_current:
                 found_current = True
-
             if not found_current:
                 continue
+            calling_stops.append(sid)
 
-            result.append({
+        if not calling_stops:
+            return []
+
+        # Get the route and direction to fetch all stops on this route
+        first_dep = data.get("departures", [{}])[0]
+        route_id = first_dep.get("route_id")
+        direction_id = first_dep.get("direction_id")
+
+        if route_id is not None and direction_id is not None:
+            all_route_stops = await self.get_route_stops(
+                route_id=route_id,
+                direction_id=direction_id,
+                current_stop_id=current_stop_id,
+                route_type=route_type,
+            )
+            calling_set = set(calling_stops)
+
+            # Mark stops not in the calling pattern as express
+            return [
+                {
+                    "name": s["name"],
+                    "stop_id": s["stop_id"],
+                    "is_current": s["is_current"],
+                    "is_express": s["stop_id"] not in calling_set,
+                }
+                for s in all_route_stops
+            ]
+
+        # Fallback: just use calling stops without express info
+        return [
+            {
                 "name": stop_name(sid),
                 "stop_id": sid,
-                "is_current": is_current,
+                "is_current": sid == current_stop_id,
                 "is_express": False,
-            })
-
-            # Interleave any stops skipped after this scheduled stop
-            for skipped in dep.get("skipped_stops", []):
-                skipped_id = skipped.get("stop_id")
-                skipped_name = _clean_stop_name(
-                    stops_lookup.get(str(skipped_id), {}).get("stop_name")
-                    or skipped.get("stop_name", "Unknown")
-                )
-                result.append({
-                    "name": skipped_name,
-                    "stop_id": skipped_id,
-                    "is_current": False,
-                    "is_express": True,
-                })
-
-        return result
+            }
+            for sid in calling_stops
+        ]
