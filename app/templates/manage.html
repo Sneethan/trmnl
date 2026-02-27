@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Transit Victoria — Settings</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', system-ui, sans-serif; background: #f5f5f5; color: #111; }
+    .wrap { max-width: 480px; margin: 40px auto; padding: 0 16px; }
+    h1 { font-size: 22px; font-weight: 600; margin-bottom: 4px; }
+    .subtitle { font-size: 14px; color: #666; margin-bottom: 24px; }
+    .card { background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 24px; }
+    label { display: block; font-size: 13px; font-weight: 600; color: #333; margin-bottom: 6px; }
+    .hint { font-size: 12px; color: #888; margin-bottom: 16px; }
+    input[type="text"] {
+      width: 100%; padding: 10px 12px; border: 1px solid #ccc; border-radius: 6px;
+      font-size: 15px; font-family: inherit; outline: none;
+    }
+    input[type="text"]:focus { border-color: #111; }
+    .search-results {
+      border: 1px solid #ddd; border-radius: 6px; margin-top: 4px; max-height: 200px;
+      overflow-y: auto; display: none; background: #fff;
+    }
+    .search-results.open { display: block; }
+    .search-result {
+      padding: 10px 12px; cursor: pointer; font-size: 14px; border-bottom: 1px solid #eee;
+    }
+    .search-result:last-child { border-bottom: none; }
+    .search-result:hover { background: #f0f0f0; }
+    .search-result .stop-id { font-size: 12px; color: #888; }
+    .current { background: #f9f9f9; border: 1px solid #eee; border-radius: 6px; padding: 12px; margin-bottom: 16px; }
+    .current-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: #888; margin-bottom: 4px; }
+    .current-value { font-size: 16px; font-weight: 500; }
+    .field { margin-bottom: 16px; }
+    .btn {
+      display: inline-block; padding: 10px 24px; background: #111; color: #fff;
+      border: none; border-radius: 6px; font-size: 15px; font-weight: 500;
+      cursor: pointer; font-family: inherit;
+    }
+    .btn:hover { background: #333; }
+    .btn-row { margin-top: 20px; display: flex; align-items: center; gap: 16px; }
+    .back-link { font-size: 14px; color: #666; text-decoration: none; }
+    .back-link:hover { color: #111; }
+    .msg { padding: 10px 12px; border-radius: 6px; margin-bottom: 16px; font-size: 14px; }
+    .msg-ok { background: #e6f9e6; color: #1a7a1a; }
+    .msg-err { background: #fde8e8; color: #991b1b; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Transit Victoria</h1>
+    <p class="subtitle">Configure your TRMNL train departure display</p>
+
+    {% if message %}
+    <div class="msg {{ 'msg-ok' if message_type == 'success' else 'msg-err' }}">{{ message }}</div>
+    {% endif %}
+
+    <div class="card">
+      <div class="current">
+        <div class="current-label">Current station</div>
+        <div class="current-value">{{ station_name }} {% if platform_numbers %}(Platforms {{ platform_numbers }}){% endif %}</div>
+      </div>
+
+      <form method="POST" action="/manage/save" id="settings-form">
+        <input type="hidden" name="uuid" value="{{ uuid }}">
+        <input type="hidden" name="stop_id" id="stop_id" value="{{ stop_id }}">
+        <input type="hidden" name="station_name" id="station_name_hidden" value="{{ station_name }}">
+
+        <div class="field">
+          <label for="search">Search station</label>
+          <input type="text" id="search" placeholder="e.g. Flinders Street" autocomplete="off">
+          <div class="search-results" id="results"></div>
+        </div>
+
+        <div class="field">
+          <label for="platform_numbers">Platform filter (optional)</label>
+          <input type="text" name="platform_numbers" id="platform_numbers" value="{{ platform_numbers or '' }}" placeholder="e.g. 1,2">
+          <p class="hint">Comma-separated platform numbers. Leave blank for all platforms.</p>
+        </div>
+
+        <div class="btn-row">
+          <button type="submit" class="btn">Save settings</button>
+          {% if plugin_setting_id %}
+          <a class="back-link" href="https://usetrmnl.com/plugin_settings/{{ plugin_setting_id }}">Back to TRMNL</a>
+          {% endif %}
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const searchInput = document.getElementById('search');
+    const resultsDiv = document.getElementById('results');
+    const stopIdInput = document.getElementById('stop_id');
+    const stationNameInput = document.getElementById('station_name_hidden');
+    let debounceTimer;
+
+    searchInput.addEventListener('input', () => {
+      clearTimeout(debounceTimer);
+      const q = searchInput.value.trim();
+      if (q.length < 2) { resultsDiv.classList.remove('open'); return; }
+      debounceTimer = setTimeout(() => fetchStations(q), 300);
+    });
+
+    async function fetchStations(q) {
+      try {
+        const res = await fetch('/api/stations/search?q=' + encodeURIComponent(q));
+        const data = await res.json();
+        if (!data.stops || data.stops.length === 0) {
+          resultsDiv.innerHTML = '<div class="search-result">No stations found</div>';
+        } else {
+          resultsDiv.innerHTML = data.stops.map(s =>
+            '<div class="search-result" data-id="' + s.stop_id + '" data-name="' + s.stop_name.replace(/"/g, '&quot;') + '">'
+            + s.stop_name + ' <span class="stop-id">#' + s.stop_id + '</span></div>'
+          ).join('');
+          resultsDiv.querySelectorAll('.search-result').forEach(el => {
+            el.addEventListener('click', () => selectStation(el));
+          });
+        }
+        resultsDiv.classList.add('open');
+      } catch (e) {
+        resultsDiv.innerHTML = '<div class="search-result">Search failed</div>';
+        resultsDiv.classList.add('open');
+      }
+    }
+
+    function selectStation(el) {
+      const id = el.dataset.id;
+      const name = el.dataset.name;
+      stopIdInput.value = id;
+      stationNameInput.value = name;
+      searchInput.value = name;
+      resultsDiv.classList.remove('open');
+    }
+
+    document.addEventListener('click', (e) => {
+      if (!resultsDiv.contains(e.target) && e.target !== searchInput) {
+        resultsDiv.classList.remove('open');
+      }
+    });
+  </script>
+</body>
+</html>

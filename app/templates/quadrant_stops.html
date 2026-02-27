@@ -138,14 +138,14 @@
 </style>
 
 <div class="layout layout--col layout--stretch-x">
-  {% if departures.size > 0 %}
+  {% if departures %}
   <div class="pid-header">
     <div class="pid-header-row">
       <div class="pid-header-info">
         <div class="pid-dest">{{ departures[0].destination }}</div>
         <div class="pid-meta">{% if departures[0].train_type == "Ltd Express" %}Ltd Express{% else %}Stops All{% endif %} · Plat {{ departures[0].platform }}</div>
       </div>
-      {% assign t = departures[0].estimated_time | split: ' ' %}
+      {% set t = departures[0].estimated_time.split(' ') %}
       <div class="pid-countdown">
         <span class="time">{{ t[0] }}</span>
         <span class="period">{{ t[1] }}</span>
@@ -154,11 +154,11 @@
   </div>
   {% endif %}
 
-  {% if stop_columns.size > 0 %}
+  {% if stop_columns %}
   <div class="stopping-pattern">
     <div class="stop-track-cap"></div>
     {% for stop in stop_columns[0] %}
-    <div class="stop-row {% if stop.is_current %}is-current{% elsif stop.is_express %}is-express{% endif %}">
+    <div class="stop-row {% if stop.is_current %}is-current{% elif stop.is_express %}is-express{% endif %}">
       <div class="stop-track">
         <div class="stop-track-line"></div>
         <div class="stop-track-dot"></div>

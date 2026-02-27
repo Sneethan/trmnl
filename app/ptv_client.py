@@ -132,6 +132,24 @@ class PTVClient:
             if s["stop_sequence"] >= current_seq
         ]
 
+    async def search_stops(self, term: str, route_type: int = 0) -> list[dict]:
+        """Search for stops by name, filtered to a route type."""
+        path = f"/v3/search/{term}"
+        params = {"route_types": route_type}
+        full_path = f"{path}?{urlencode(params, doseq=True)}"
+
+        url = self._sign_url(full_path)
+
+        async with httpx.AsyncClient() as client:
+            response = await client.get(url)
+            response.raise_for_status()
+            data = response.json()
+
+        return [
+            {"stop_id": s["stop_id"], "stop_name": _clean_stop_name(s["stop_name"])}
+            for s in data.get("stops", [])
+        ]
+
     async def get_stopping_pattern(self, run_ref: str, current_stop_id: int, route_type: int = 0) -> list[dict]:
         """Get stopping pattern for a specific run, including skipped (express) stops."""
         path = f"/v3/pattern/run/{run_ref}/route_type/{route_type}"

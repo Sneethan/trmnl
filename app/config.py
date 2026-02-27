@@ -6,7 +6,10 @@ class Settings(BaseSettings):
 
     ptv_dev_id: str
     ptv_api_key: str
-    trmnl_webhook_url: str
+    trmnl_webhook_url: str | None = None
+    trmnl_client_id: str | None = None
+    trmnl_client_secret: str | None = None
+    database_path: str = "./data/trmnl.db"
     default_stop_id: int = 19843  # Melbourne Central
     station_name: str = "Melbourne Central"
     platform_numbers: str | None = None  # Comma-separated, e.g. "1,2"

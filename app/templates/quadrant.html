@@ -108,14 +108,14 @@
 </style>
 
 <div class="layout layout--col layout--stretch-x">
-  {% if departures.size > 0 %}
+  {% if departures %}
   <div class="pid-header">
     <div class="pid-header-row">
       <div class="pid-header-info">
         <div class="pid-dest">{{ departures[0].destination }}</div>
         <div class="pid-meta">{% if departures[0].train_type == "Ltd Express" %}Ltd Express{% else %}Stops All{% endif %} · Plat {{ departures[0].platform }}</div>
       </div>
-      {% assign t = departures[0].estimated_time | split: ' ' %}
+      {% set t = departures[0].estimated_time.split(' ') %}
       <div class="pid-countdown">
         <span class="time">{{ t[0] }}</span>
         <span class="period">{{ t[1] }}</span>
@@ -123,7 +123,7 @@
     </div>
   </div>
 
-  {% if departures.size > 1 %}
+  {% if departures|length > 1 %}
   <div style="overflow:hidden;width:100%;flex:1;">
     <table class="pid-table">
       <thead>
@@ -135,7 +135,7 @@
         </tr>
       </thead>
       <tbody>
-        {% for dep in departures offset:1 %}
+        {% for dep in departures[1:] %}
         <tr>
           <td>{{ dep.scheduled_time }}</td>
           <td>{{ dep.destination }}</td>
