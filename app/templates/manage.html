@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Transit Victoria — Settings</title>
+  <title>Transit Victoria — {% if mode == 'setup' %}Setup{% else %}Settings{% endif %}</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -24,7 +24,7 @@
     .topbar-logo {
       width: 28px;
       height: 28px;
-      background: #e74c3c;
+      background: #f8654b;
       border-radius: 6px;
       display: flex;
       align-items: center;
@@ -76,7 +76,7 @@
       transition: border-color 0.15s;
     }
     input[type="text"]::placeholder { color: rgb(143 143 143); }
-    input[type="text"]:focus { border-color: #f96527; }
+    input[type="text"]:focus { border-color: #f8654b; }
 
     select {
       width: 100%;
@@ -95,7 +95,7 @@
       cursor: pointer;
       transition: border-color 0.15s;
     }
-    select:focus { border-color: #f96527; }
+    select:focus { border-color: #f8654b; }
 
     /* Search dropdown */
     .search-results {
@@ -159,7 +159,7 @@
       align-items: center;
       gap: 8px;
       padding: 10px 24px;
-      background: #f96527;
+      background: #f8654b;
       color: #fff;
       border: none;
       border-radius: 8px;
@@ -206,18 +206,24 @@
 <body>
   <div class="topbar">
     <div class="topbar-logo">T</div>
-    <span class="topbar-title">Transit Victoria</span>
+    <span class="topbar-title">Transit Victoria for TRMNL</span>
   </div>
 
   <div class="wrap">
+    {% if mode == 'setup' %}
+    <h1>Welcome to Transit Victoria</h1>
+    <p class="subtitle">Choose your station to get started</p>
+    {% else %}
     <h1>Settings</h1>
     <p class="subtitle">Configure your train departure display</p>
+    {% endif %}
 
     {% if message %}
     <div class="msg {{ 'msg-ok' if message_type == 'success' else 'msg-err' }}">{{ message }}</div>
     {% endif %}
 
     <div class="card">
+      {% if mode != 'setup' %}
       <div class="current">
         <div class="current-icon">
           <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 2C8 2 4 3.5 4 7v9.5C4 18.43 5.57 20 7.5 20L6 21.5v.5h2l2-2h4l2 2h2v-.5L16.5 20c1.93 0 3.5-1.57 3.5-3.5V7c0-3.5-4-5-8-5zM7.5 17c-.83 0-1.5-.67-1.5-1.5S6.67 14 7.5 14s1.5.67 1.5 1.5S8.33 17 7.5 17zm3.5-6H6V7h5v4zm2 0V7h5v4h-5zm3.5 6c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg>
@@ -227,9 +233,15 @@
           <div class="current-value">{{ station_name }}{% if platform_numbers %} <span style="font-weight:400;color:rgb(143 143 143);">Plat {{ platform_numbers }}</span>{% endif %}</div>
         </div>
       </div>
+      {% endif %}
 
-      <form method="POST" action="/manage/save" id="settings-form">
+      <form method="POST" action="{% if mode == 'setup' %}/setup/save{% else %}/manage/save{% endif %}" id="settings-form">
+        {% if mode == 'setup' %}
+        <input type="hidden" name="callback_url" value="{{ callback_url }}">
+        <input type="hidden" name="token" value="{{ token }}">
+        {% else %}
         <input type="hidden" name="uuid" value="{{ uuid }}">
+        {% endif %}
         <input type="hidden" name="stop_id" id="stop_id" value="{{ stop_id }}">
         <input type="hidden" name="station_name" id="station_name_hidden" value="{{ station_name }}">
 
@@ -256,9 +268,14 @@
         </div>
 
         <div class="btn-row">
+          {% if mode == 'setup' %}
+          <button type="submit" class="btn">Save & Continue</button>
+          <a class="back-link" href="{{ callback_url }}">Skip setup</a>
+          {% else %}
           <button type="submit" class="btn">Save settings</button>
           {% if plugin_setting_id %}
-          <a class="back-link" href="https://usetrmnl.com/plugin_settings/{{ plugin_setting_id }}">Back to TRMNL</a>
+          <a class="back-link" href="https://usetrmnl.com/plugin_settings/{{ plugin_setting_id }}?force_refresh=true">Back to TRMNL</a>
+          {% endif %}
           {% endif %}
         </div>
       </form>

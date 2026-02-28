@@ -2,6 +2,7 @@ import json
 import os
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
+from urllib.parse import quote
 from zoneinfo import ZoneInfo
 
 import httpx
@@ -16,6 +17,10 @@ from .ptv_client import PTVClient
 from .trmnl_client import TRMNLClient
 
 scheduler = AsyncIOScheduler()
+
+# Pending settings from setup page, keyed by access_token.
+# Applied when the /install/success webhook arrives.
+_pending_settings: dict[str, dict] = {}
 
 # Jinja2 environment for server-side rendering
 _template_dir = os.path.join(os.path.dirname(__file__), "templates")
@@ -169,7 +174,7 @@ async def install(
     code: str = Query(...),
     installation_callback_url: str = Query(...),
 ):
-    """Browser redirect from TRMNL with auth code; exchange for token and redirect back."""
+    """Browser redirect from TRMNL with auth code; exchange for token and redirect to setup."""
     async with httpx.AsyncClient() as client:
         resp = await client.post(
             "https://trmnl.com/oauth/token",
@@ -182,7 +187,59 @@ async def install(
         )
         resp.raise_for_status()
 
-    return RedirectResponse(url=installation_callback_url, status_code=302)
+    token_data = resp.json()
+    access_token = token_data.get("access_token", "")
+    return RedirectResponse(
+        url=f"/setup?callback_url={quote(installation_callback_url)}&token={access_token}",
+        status_code=302,
+    )
+
+
+# ── Setup flow (shown between OAuth and TRMNL callback) ─────────────────────
+
+@app.get("/setup", response_class=HTMLResponse)
+async def setup_page(
+    callback_url: str = Query(...),
+    token: str = Query(""),
+):
+    """Show setup page so the user can pick a station before completing install."""
+    template = jinja_env.get_template("manage.html")
+    return template.render(
+        mode="setup",
+        callback_url=callback_url,
+        token=token,
+        uuid="",
+        station_name="Melbourne Central",
+        stop_id=19843,
+        platform_numbers="",
+        refresh_minutes=5,
+        plugin_setting_id=None,
+        message=None,
+        message_type=None,
+    )
+
+
+@app.post("/setup/save")
+async def setup_save(
+    callback_url: str = Form(...),
+    token: str = Form(""),
+    stop_id: int = Form(...),
+    station_name: str = Form(...),
+    platform_numbers: str = Form(""),
+    refresh_minutes: int = Form(5),
+):
+    """Store pending settings and redirect to TRMNL callback to complete install."""
+    if token:
+        # Guard against unbounded growth
+        if len(_pending_settings) > 1000:
+            _pending_settings.clear()
+        _pending_settings[token] = {
+            "stop_id": stop_id,
+            "station_name": station_name,
+            "platform_numbers": platform_numbers.strip() or None,
+            "refresh_minutes": max(1, refresh_minutes),
+        }
+    return RedirectResponse(url=callback_url, status_code=302)
 
 
 @app.post("/install/success")
@@ -200,15 +257,28 @@ async def install_success(request: Request):
     if not uuid:
         return JSONResponse({"error": "Missing uuid"}, status_code=400)
 
+    access_token = request.headers.get("authorization", "").removeprefix("Bearer ")
+
     existing = await db.get_user(uuid)
     if not existing:
         await db.create_user(
             uuid=uuid,
-            access_token=request.headers.get("authorization", "").removeprefix("Bearer "),
+            access_token=access_token,
             plugin_setting_id=user_data.get("plugin_setting_id"),
             user_name=user_data.get("name"),
             user_email=user_data.get("email"),
             time_zone=user_data.get("time_zone_iana") or user_data.get("time_zone"),
+        )
+
+    # Apply any pending settings from the setup page
+    pending = _pending_settings.pop(access_token, None)
+    if pending:
+        await db.update_user_settings(
+            uuid=uuid,
+            stop_id=pending["stop_id"],
+            station_name=pending["station_name"],
+            platform_numbers=pending["platform_numbers"],
+            refresh_minutes=pending["refresh_minutes"],
         )
 
     return {"status": "ok"}
@@ -287,6 +357,9 @@ async def manage_page(uuid: str = Query(...)):
 
     template = jinja_env.get_template("manage.html")
     return template.render(
+        mode="manage",
+        callback_url="",
+        token="",
         uuid=uuid,
         station_name=user["station_name"],
         stop_id=user["stop_id"],
@@ -322,6 +395,9 @@ async def manage_save(
     user = await db.get_user(uuid)
     template = jinja_env.get_template("manage.html")
     return template.render(
+        mode="manage",
+        callback_url="",
+        token="",
         uuid=uuid,
         station_name=user["station_name"],
         stop_id=user["stop_id"],
