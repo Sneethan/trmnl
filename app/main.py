@@ -1,3 +1,4 @@
+import json
 import os
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
@@ -74,6 +75,30 @@ def _parse_platforms(raw: str | None) -> list[int] | None:
     if not raw:
         return None
     return [int(p.strip()) for p in raw.split(",") if p.strip()]
+
+
+async def _get_fresh_data(user: dict) -> dict:
+    """Return this user's departure data, using the DB cache when it is still
+    within their chosen refresh window and fetching from PTV otherwise."""
+    refresh_minutes = user.get("refresh_minutes") or 5
+    cache_updated_at = user.get("cache_updated_at")
+
+    if cache_updated_at:
+        last_fetch = datetime.fromisoformat(cache_updated_at)
+        if last_fetch.tzinfo is None:
+            last_fetch = last_fetch.replace(tzinfo=timezone.utc)
+        age_seconds = (datetime.now(timezone.utc) - last_fetch).total_seconds()
+        if age_seconds < refresh_minutes * 60:
+            cached_json = user.get("cached_departures")
+            if cached_json:
+                return json.loads(cached_json)
+
+    # Cache miss or expired — fetch a fresh batch from PTV.
+    platform_numbers = _parse_platforms(user.get("platform_numbers"))
+    data = await fetch_departure_data(stop_id=user["stop_id"], platform_numbers=platform_numbers)
+    data["station_name"] = user["station_name"]
+    await db.set_cached_departures(user["uuid"], data)
+    return data
 
 
 # ── Push mode (optional, active when TRMNL_WEBHOOK_URL is set) ──────────────
@@ -232,12 +257,7 @@ async def trmnl_markup(request: Request):
     if not user:
         return JSONResponse({"error": "User not found"}, status_code=404)
 
-    stop_id = user["stop_id"]
-    station_name = user["station_name"]
-    platform_numbers = _parse_platforms(user.get("platform_numbers"))
-
-    data = await fetch_departure_data(stop_id=stop_id, platform_numbers=platform_numbers)
-    data["station_name"] = station_name
+    data = await _get_fresh_data(user)
 
     # TRMNL expects these exact keys
     layout_map = {
@@ -271,6 +291,7 @@ async def manage_page(uuid: str = Query(...)):
         station_name=user["station_name"],
         stop_id=user["stop_id"],
         platform_numbers=user.get("platform_numbers") or "",
+        refresh_minutes=user.get("refresh_minutes") or 5,
         plugin_setting_id=user.get("plugin_setting_id"),
         message=None,
         message_type=None,
@@ -283,6 +304,7 @@ async def manage_save(
     stop_id: int = Form(...),
     station_name: str = Form(...),
     platform_numbers: str = Form(""),
+    refresh_minutes: int = Form(5),
 ):
     user = await db.get_user(uuid)
     if not user:
@@ -294,6 +316,7 @@ async def manage_save(
         stop_id=stop_id,
         station_name=station_name,
         platform_numbers=platforms,
+        refresh_minutes=max(1, refresh_minutes),
     )
 
     user = await db.get_user(uuid)
@@ -303,6 +326,7 @@ async def manage_save(
         station_name=user["station_name"],
         stop_id=user["stop_id"],
         platform_numbers=user.get("platform_numbers") or "",
+        refresh_minutes=user.get("refresh_minutes") or 5,
         plugin_setting_id=user.get("plugin_setting_id"),
         message="Settings saved",
         message_type="success",

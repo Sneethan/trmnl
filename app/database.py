@@ -1,3 +1,4 @@
+import json
 import os
 from datetime import datetime, timezone
 
@@ -13,6 +14,9 @@ CREATE TABLE IF NOT EXISTS users (
     stop_id INTEGER DEFAULT 19843,
     station_name TEXT DEFAULT 'Melbourne Central',
     platform_numbers TEXT,
+    refresh_minutes INTEGER DEFAULT 5,
+    cached_departures TEXT,
+    cache_updated_at TEXT,
     user_name TEXT,
     user_email TEXT,
     time_zone TEXT,
@@ -20,6 +24,13 @@ CREATE TABLE IF NOT EXISTS users (
     updated_at TEXT NOT NULL
 );
 """
+
+# Migrations for existing databases that predate new columns.
+_MIGRATIONS = [
+    "ALTER TABLE users ADD COLUMN refresh_minutes INTEGER DEFAULT 5",
+    "ALTER TABLE users ADD COLUMN cached_departures TEXT",
+    "ALTER TABLE users ADD COLUMN cache_updated_at TEXT",
+]
 
 
 async def _get_db() -> aiosqlite.Connection:
@@ -34,6 +45,12 @@ async def init_db():
     try:
         await db.execute(_CREATE_TABLE)
         await db.commit()
+        for sql in _MIGRATIONS:
+            try:
+                await db.execute(sql)
+                await db.commit()
+            except Exception:
+                pass  # Column already exists — safe to ignore
     finally:
         await db.close()
 
@@ -76,19 +93,35 @@ async def update_user_settings(
     stop_id: int,
     station_name: str,
     platform_numbers: str | None = None,
+    refresh_minutes: int = 5,
 ) -> dict | None:
     now = datetime.now(timezone.utc).isoformat()
     db = await _get_db()
     try:
         await db.execute(
             """UPDATE users SET stop_id = ?, station_name = ?,
-               platform_numbers = ?, updated_at = ? WHERE uuid = ?""",
-            (stop_id, station_name, platform_numbers, now, uuid),
+               platform_numbers = ?, refresh_minutes = ?, updated_at = ? WHERE uuid = ?""",
+            (stop_id, station_name, platform_numbers, refresh_minutes, now, uuid),
         )
         await db.commit()
     finally:
         await db.close()
     return await get_user(uuid)
+
+
+async def set_cached_departures(uuid: str, data: dict) -> None:
+    """Persist a fresh departure payload against the user so it can be reused
+    within their chosen refresh window."""
+    now = datetime.now(timezone.utc).isoformat()
+    db = await _get_db()
+    try:
+        await db.execute(
+            "UPDATE users SET cached_departures = ?, cache_updated_at = ? WHERE uuid = ?",
+            (json.dumps(data), now, uuid),
+        )
+        await db.commit()
+    finally:
+        await db.close()
 
 
 async def delete_user(uuid: str):
