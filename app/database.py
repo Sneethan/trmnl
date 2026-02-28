@@ -88,6 +88,26 @@ async def create_user(
     return await get_user(uuid)
 
 
+async def update_user_token(
+    uuid: str,
+    access_token: str,
+    plugin_setting_id: int | None = None,
+) -> None:
+    """Update access_token and plugin_setting_id for an existing user
+    (e.g. after install/success webhook when user was auto-created by /manage)."""
+    now = datetime.now(timezone.utc).isoformat()
+    db = await _get_db()
+    try:
+        await db.execute(
+            """UPDATE users SET access_token = ?, plugin_setting_id = ?, updated_at = ?
+               WHERE uuid = ?""",
+            (access_token, plugin_setting_id, now, uuid),
+        )
+        await db.commit()
+    finally:
+        await db.close()
+
+
 async def update_user_settings(
     uuid: str,
     stop_id: int,

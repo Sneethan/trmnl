@@ -189,6 +189,7 @@ async def install(
         token_data = resp.json()
 
     access_token = token_data.get("access_token", "")
+    print(f"[install] OAuth token_data keys: {list(token_data.keys())}, token_prefix={access_token[:12]}...")
     return RedirectResponse(
         url=f"/setup?callback_url={quote(installation_callback_url)}&token={access_token}",
         status_code=302,
@@ -229,6 +230,7 @@ async def setup_save(
     refresh_minutes: int = Form(5),
 ):
     """Store pending settings and redirect to TRMNL callback to complete install."""
+    print(f"[setup/save] token_prefix={token[:12] if token else '(empty)'}..., stop_id={stop_id}, station={station_name}")
     if token:
         # Guard against unbounded growth
         if len(_pending_settings) > 1000:
@@ -258,9 +260,17 @@ async def install_success(request: Request):
         return JSONResponse({"error": "Missing uuid"}, status_code=400)
 
     access_token = request.headers.get("authorization", "").removeprefix("Bearer ")
+    print(f"[install/success] uuid={uuid}, token_prefix={access_token[:12]}...")
 
     existing = await db.get_user(uuid)
-    if not existing:
+    if existing:
+        # User may have been auto-created by /manage — update with real data
+        await db.update_user_token(
+            uuid=uuid,
+            access_token=access_token,
+            plugin_setting_id=user_data.get("plugin_setting_id"),
+        )
+    else:
         await db.create_user(
             uuid=uuid,
             access_token=access_token,
@@ -272,6 +282,7 @@ async def install_success(request: Request):
 
     # Apply any pending settings from the setup page
     pending = _pending_settings.pop(access_token, None)
+    print(f"[install/success] pending settings found: {pending is not None}")
     if pending:
         await db.update_user_settings(
             uuid=uuid,
@@ -349,6 +360,7 @@ async def trmnl_markup(request: Request):
 
 @app.get("/manage", response_class=HTMLResponse)
 async def manage_page(uuid: str = Query(...)):
+    print(f"[manage] uuid={uuid}")
     user = await db.get_user(uuid)
     if not user:
         # Auto-create user on first manage visit (webhook may not have arrived yet)
@@ -379,6 +391,7 @@ async def manage_save(
     platform_numbers: str = Form(""),
     refresh_minutes: int = Form(5),
 ):
+    print(f"[manage/save] uuid={uuid}, stop_id={stop_id}, station={station_name}")
     user = await db.get_user(uuid)
     if not user:
         return HTMLResponse("<h1>User not found</h1>", status_code=404)
