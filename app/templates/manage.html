@@ -78,6 +78,25 @@
     input[type="text"]::placeholder { color: rgb(143 143 143); }
     input[type="text"]:focus { border-color: #f96527; }
 
+    select {
+      width: 100%;
+      padding: 10px 14px;
+      background: rgb(21 21 21);
+      border: 1px solid rgb(91 91 91);
+      border-radius: 8px;
+      font-size: 15px;
+      font-family: inherit;
+      color: #e0e0e0;
+      outline: none;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%238f8f8f' d='M6 8L0 0h12z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 14px center;
+      cursor: pointer;
+      transition: border-color 0.15s;
+    }
+    select:focus { border-color: #f96527; }
+
     /* Search dropdown */
     .search-results {
       border: 1px solid rgb(91 91 91);
@@ -224,6 +243,16 @@
           <label for="platform_numbers">Platform filter</label>
           <input type="text" name="platform_numbers" id="platform_numbers" value="{{ platform_numbers or '' }}" placeholder="e.g. 1,2">
           <p class="hint">Comma-separated. Leave blank for all platforms.</p>
+        </div>
+
+        <div class="field">
+          <label for="refresh_minutes">Refresh every</label>
+          <select name="refresh_minutes" id="refresh_minutes">
+            {% for mins in [5, 10, 15, 30, 60] %}
+            <option value="{{ mins }}" {% if refresh_minutes == mins %}selected{% endif %}>{{ mins }} minutes</option>
+            {% endfor %}
+          </select>
+          <p class="hint">How often your display fetches new departure times.</p>
         </div>
 
         <div class="btn-row">
