@@ -144,6 +144,19 @@ async def set_cached_departures(uuid: str, data: dict) -> None:
         await db.close()
 
 
+async def flush_cached_departures(uuid: str) -> None:
+    """Clear cached departure data for a user, forcing a fresh PTV fetch on next request."""
+    db = await _get_db()
+    try:
+        await db.execute(
+            "UPDATE users SET cached_departures = NULL, cache_updated_at = NULL WHERE uuid = ?",
+            (uuid,),
+        )
+        await db.commit()
+    finally:
+        await db.close()
+
+
 async def delete_user(uuid: str):
     db = await _get_db()
     try:

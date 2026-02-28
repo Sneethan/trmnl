@@ -404,6 +404,7 @@ async def manage_save(
         platform_numbers=platforms,
         refresh_minutes=max(1, refresh_minutes),
     )
+    await db.flush_cached_departures(uuid)
 
     user = await db.get_user(uuid)
     template = jinja_env.get_template("manage.html")
