@@ -198,7 +198,7 @@
         <div class="pid-dest">{{ departures[0].destination }}</div>
         <div class="pid-meta">{% if departures[0].train_type == "Ltd Express" %}Ltd Express{% else %}Stops All{% endif %} · Plat {{ departures[0].platform }}</div>
       </div>
-      {% assign t = departures[0].estimated_time | split: ' ' %}
+      {% set t = departures[0].estimated_time.split(' ') %}
       <div class="pid-countdown">
         <span class="time">{{ t[0] }}</span>
         <span class="period">{{ t[1] }}</span>
@@ -210,11 +210,11 @@
   {% if stop_columns %}
   <div class="stopping-pattern">
     {% for column in stop_columns %}
-    {% if forloop.index <= 2 %}
+    {% if loop.index <= 2 %}
     <div class="stop-col">
       <div class="stop-track-cap"></div>
       {% for stop in column %}
-      <div class="stop-row {% if stop.is_current %}is-current{% elsif stop.is_express %}is-express{% endif %}">
+      <div class="stop-row {% if stop.is_current %}is-current{% elif stop.is_express %}is-express{% endif %}">
         <div class="stop-track">
           <div class="stop-track-line"></div>
           <div class="stop-track-dot"></div>
@@ -229,7 +229,7 @@
   </div>
   {% endif %}
 
-  {% if departures.size > 1 %}
+  {% if departures|length > 1 %}
   <div style="overflow:hidden;width:100%;flex:1;">
     <table class="pid-table">
       <thead>
@@ -241,7 +241,7 @@
         </tr>
       </thead>
       <tbody>
-        {% for dep in departures offset:1 %}
+        {% for dep in departures[1:] %}
         <tr>
           <td>{{ dep.scheduled_time }}</td>
           <td>{{ dep.destination }}</td>
