@@ -186,8 +186,8 @@ async def install(
             },
         )
         resp.raise_for_status()
+        token_data = resp.json()
 
-    token_data = resp.json()
     access_token = token_data.get("access_token", "")
     return RedirectResponse(
         url=f"/setup?callback_url={quote(installation_callback_url)}&token={access_token}",
