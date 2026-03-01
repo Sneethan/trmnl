@@ -205,15 +205,17 @@ class PTVClient:
                 current_stop_id=current_stop_id,
                 route_type=route_type,
             )
-            calling_set = set(calling_stops)
+            calling_names = set(stop_name(sid) for sid in calling_stops)
 
             # Mark stops not in the calling pattern as express
+            # Match by name rather than stop_id because city loop stations
+            # have different stop_ids depending on direction/platform
             return [
                 {
                     "name": s["name"],
                     "stop_id": s["stop_id"],
                     "is_current": s["is_current"],
-                    "is_express": s["stop_id"] not in calling_set,
+                    "is_express": s["name"] not in calling_names,
                 }
                 for s in all_route_stops
             ]
