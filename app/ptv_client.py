@@ -156,77 +156,63 @@ class PTVClient:
     async def get_stopping_pattern(self, run_ref: str, current_stop_id: int, route_type: int = 0) -> list[dict]:
         """Get stopping pattern for a specific run.
 
-        Uses the pattern endpoint WITHOUT include_skipped_stops, then cross-references
-        with route stops to identify express (skipped) stations.
+        Makes two requests to the pattern endpoint:
+        1. Without include_skipped_stops — gives us the stops the train calls at.
+        2. With include_skipped_stops — gives us ALL stops on the train's actual
+           path (including express-skipped ones).
+
+        By diffing the two we know exactly which stops are express, without
+        needing the route-stops endpoint (which returns city-loop stops that
+        may not be on this run's path at all).
         """
-        path = f"/v3/pattern/run/{run_ref}/route_type/{route_type}"
-        params = {"expand": ["stop", "route", "direction"]}
-        query = urlencode(params, doseq=True)
-        full_path = f"{path}?{query}"
+        base_path = f"/v3/pattern/run/{run_ref}/route_type/{route_type}"
 
-        url = self._sign_url(full_path)
-
+        # Request 1: calling stops only
+        params = {"expand": ["stop"]}
+        url = self._sign_url(f"{base_path}?{urlencode(params, doseq=True)}")
         async with httpx.AsyncClient() as client:
-            response = await client.get(url)
-            response.raise_for_status()
-            data = response.json()
+            resp = await client.get(url)
+            resp.raise_for_status()
+            data_calling = resp.json()
 
-        stops_lookup = data.get("stops", {})
+        # Request 2: all stops on the run's path (including skipped)
+        params_full = {"expand": ["stop"], "include_skipped_stops": "true"}
+        url_full = self._sign_url(f"{base_path}?{urlencode(params_full, doseq=True)}")
+        async with httpx.AsyncClient() as client:
+            resp_full = await client.get(url_full)
+            resp_full.raise_for_status()
+            data_full = resp_full.json()
+
+        stops_lookup = {**data_calling.get("stops", {}), **data_full.get("stops", {})}
 
         def stop_name(stop_id):
             info = stops_lookup.get(str(stop_id), {})
             return _clean_stop_name(info.get("stop_name", "Unknown"))
 
-        # Collect stops the train actually calls at (from current stop onward)
-        calling_stops = []
+        # Build set of stop_ids the train actually calls at (from current stop onward)
+        calling_ids: set[int] = set()
         found_current = False
-
-        for dep in data.get("departures", []):
+        for dep in data_calling.get("departures", []):
             sid = dep.get("stop_id")
-            is_current = sid == current_stop_id
-            if is_current:
+            if sid == current_stop_id:
+                found_current = True
+            if found_current:
+                calling_ids.add(sid)
+
+        # Build ordered list of ALL stops on the run's path (from current stop onward)
+        found_current = False
+        result = []
+        for dep in data_full.get("departures", []):
+            sid = dep.get("stop_id")
+            if sid == current_stop_id:
                 found_current = True
             if not found_current:
                 continue
-            calling_stops.append(sid)
-
-        if not calling_stops:
-            return []
-
-        # Get the route and direction to fetch all stops on this route
-        first_dep = data.get("departures", [{}])[0]
-        route_id = first_dep.get("route_id")
-        direction_id = first_dep.get("direction_id")
-
-        if route_id is not None and direction_id is not None:
-            all_route_stops = await self.get_route_stops(
-                route_id=route_id,
-                direction_id=direction_id,
-                current_stop_id=current_stop_id,
-                route_type=route_type,
-            )
-            calling_names = set(stop_name(sid) for sid in calling_stops)
-
-            # Mark stops not in the calling pattern as express
-            # Match by name rather than stop_id because city loop stations
-            # have different stop_ids depending on direction/platform
-            return [
-                {
-                    "name": s["name"],
-                    "stop_id": s["stop_id"],
-                    "is_current": s["is_current"],
-                    "is_express": s["name"] not in calling_names,
-                }
-                for s in all_route_stops
-            ]
-
-        # Fallback: just use calling stops without express info
-        return [
-            {
+            result.append({
                 "name": stop_name(sid),
                 "stop_id": sid,
                 "is_current": sid == current_stop_id,
-                "is_express": False,
-            }
-            for sid in calling_stops
-        ]
+                "is_express": sid not in calling_ids,
+            })
+
+        return result
