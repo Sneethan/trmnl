@@ -34,7 +34,7 @@ async def fetch_departure_data(
     stop_id: int,
     platform_numbers: list[int] | None = None,
 ) -> dict:
-    """Fetch PTV departures + stopping pattern — shared by push mode and markup endpoint."""
+    """Fetch PTV departures + stopping pattern + disruptions — shared by push mode and markup endpoint."""
     ptv = PTVClient(settings.ptv_dev_id, settings.ptv_api_key)
 
     departures = await ptv.get_departures(
@@ -50,6 +50,12 @@ async def fetch_departure_data(
             run_ref=departures[0]["run_ref"],
             current_stop_id=stop_id,
         )
+
+    # Fetch current disruptions for this stop
+    try:
+        disruptions = await ptv.get_disruptions(stop_id=stop_id, route_type=0)
+    except Exception:
+        disruptions = []
 
     per_col = 6
     max_cols = 4
@@ -72,6 +78,14 @@ async def fetch_departure_data(
             for d in departures
         ],
         "stop_columns": stop_columns,
+        "disruptions": [
+            {
+                "title": d["title"],
+                "severity": d["severity"],
+                "short_label": d["short_label"],
+            }
+            for d in disruptions
+        ],
         "updated_at": datetime.now(timezone.utc).astimezone(ZoneInfo("Australia/Melbourne")).strftime("%I:%M %p").lstrip("0").lower(),
     }
 

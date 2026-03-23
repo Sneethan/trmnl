@@ -9,6 +9,18 @@ import httpx
 
 MELBOURNE_TZ = ZoneInfo("Australia/Melbourne")
 
+# Patterns used to classify disruption severity from title/description text.
+_REPLACEMENT_BUS_PATTERNS = re.compile(
+    r"bus(?:es)?\s+replac|replacement\s+bus|rail\s+replacement|"
+    r"coach(?:es)?\s+replac|replacement\s+coach",
+    re.IGNORECASE,
+)
+_SUSPENDED_PATTERNS = re.compile(
+    r"suspend|cancel|not\s+running|no\s+trains|service\s+halted|"
+    r"line\s+closed|trains\s+will\s+not",
+    re.IGNORECASE,
+)
+
 
 def _clean_stop_name(name: str) -> str:
     return re.sub(r"\s*\bStation\b\s*$", "", name, flags=re.IGNORECASE).strip()
@@ -152,6 +164,69 @@ class PTVClient:
             {"stop_id": s["stop_id"], "stop_name": _clean_stop_name(s["stop_name"])}
             for s in data.get("stops", [])
         ]
+
+    async def get_disruptions(self, stop_id: int, route_type: int = 0) -> list[dict]:
+        """Get current disruptions affecting a stop.
+
+        Calls /v3/disruptions/stop/{stop_id} with disruption_status=1 (current only),
+        filters to metro_train, and classifies each disruption by severity.
+        """
+        path = f"/v3/disruptions/stop/{stop_id}"
+        params = {"disruption_status": 1}
+        full_path = f"{path}?{urlencode(params)}"
+        url = self._sign_url(full_path)
+
+        async with httpx.AsyncClient() as client:
+            response = await client.get(url)
+            response.raise_for_status()
+            data = response.json()
+
+        disruptions_container = data.get("disruptions", {})
+
+        # Map route_type to the key in the disruptions response
+        mode_keys = {
+            0: "metro_train",
+            1: "metro_tram",
+            2: "metro_bus",
+            3: "regional_train",
+        }
+        mode_key = mode_keys.get(route_type, "metro_train")
+
+        raw = disruptions_container.get(mode_key, [])
+        # Also include "general" disruptions which may affect all modes
+        raw += disruptions_container.get("general", [])
+
+        results = []
+        for d in raw:
+            title = d.get("title", "")
+            description = d.get("description", "")
+            text = f"{title} {description}"
+
+            if _REPLACEMENT_BUS_PATTERNS.search(text):
+                severity = "replacement_bus"
+                short_label = "Buses replacing trains"
+            elif _SUSPENDED_PATTERNS.search(text):
+                severity = "suspended"
+                short_label = "Service suspended"
+            else:
+                severity = "disruption"
+                short_label = "Service disruption"
+
+            results.append({
+                "disruption_id": d.get("disruption_id"),
+                "title": title,
+                "description": description,
+                "severity": severity,
+                "short_label": short_label,
+                "disruption_type": d.get("disruption_type", ""),
+                "from_date": d.get("from_date"),
+                "to_date": d.get("to_date"),
+            })
+
+        # Sort: replacement_bus and suspended first, then general disruptions
+        severity_order = {"replacement_bus": 0, "suspended": 1, "disruption": 2}
+        results.sort(key=lambda r: severity_order.get(r["severity"], 99))
+        return results
 
     async def get_stopping_pattern(self, run_ref: str, current_stop_id: int, route_type: int = 0) -> list[dict]:
         """Get stopping pattern for a specific run.

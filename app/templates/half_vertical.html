@@ -188,9 +188,65 @@
     display: inline-block;
     white-space: nowrap;
   }
+
+  /* Disruption banner */
+  .disruption-banner {
+    background: var(--black);
+    color: var(--white);
+    padding: 5px 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .disruption-icon {
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    flex-shrink: 0;
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--white);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+  }
+
+  .disruption-text {
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .disruption-title {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .disruption-label {
+    font-size: 10px;
+    font-weight: 400;
+    color: var(--gray-60, #bbb);
+  }
 </style>
 
 <div class="layout layout--col layout--stretch-x">
+  {% if disruptions %}
+  <div class="disruption-banner">
+    <div class="disruption-icon">!</div>
+    <div class="disruption-text">
+      <div class="disruption-title">{{ disruptions[0].title }}</div>
+      <div class="disruption-label">{{ disruptions[0].short_label }}</div>
+    </div>
+  </div>
+  {% endif %}
+
   {% if departures %}
   <div class="pid-header">
     <div class="pid-header-row">
