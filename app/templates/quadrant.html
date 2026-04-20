@@ -1,157 +1,188 @@
 <style>
-  /* PID-specific styles for quadrant (400×240) */
-  .pid-header {
-    border-top: 3px solid var(--black);
-    padding: 6px 0 4px;
+  .vic-q {
     width: 100%;
+    height: 100%;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
   }
 
-  .pid-header-row {
+  .vic-q-marker {
+    width: 100%;
+    height: 10px;
+    background: var(--black);
+    flex: 0 0 auto;
+  }
+
+  .vic-q-next {
+    margin-top: 6px;
+    border-bottom: 1px solid var(--black);
+    padding-bottom: 5px;
+  }
+
+  .vic-q-row {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 6px;
   }
 
-  .pid-header-info {
-    flex: 1;
+  .vic-q-left {
     min-width: 0;
-    padding-right: 6px;
+    flex: 1;
   }
 
-  .pid-dest {
+  .vic-q-dest {
     font-family: 'Inter', sans-serif;
-    font-size: 22px;
-    font-weight: 500;
-    color: var(--black);
-    letter-spacing: -0.5px;
-    line-height: 1.1;
+    font-size: 21px;
+    font-weight: 700;
+    line-height: 0.95;
+    letter-spacing: -0.4px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
   }
 
-  .pid-meta {
-    font-family: 'Inter', sans-serif;
-    font-size: 11px;
-    font-weight: 400;
-    color: var(--gray-25, #555);
+  .vic-q-meta {
     margin-top: 1px;
-  }
-
-  .pid-countdown {
-    background: var(--black);
-    color: var(--white);
-    padding: 5px 10px;
-    text-align: center;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    line-height: 1;
-    flex-shrink: 0;
-  }
-
-  .pid-countdown .time {
-    font-family: 'Inter', sans-serif;
-    font-size: 18px;
-    font-weight: 600;
-  }
-
-  .pid-countdown .period {
     font-family: 'Inter', sans-serif;
     font-size: 10px;
-    font-weight: 400;
+    color: var(--gray-25, #555);
+  }
+
+  .vic-q-time {
+    flex: 0 0 auto;
+    min-width: 78px;
+    background: var(--black);
+    color: var(--white);
+    text-align: center;
+    padding: 4px 6px;
+  }
+
+  .vic-q-time .value {
+    font-family: 'Inter', sans-serif;
+    font-size: 17px;
+    font-weight: 700;
+    line-height: 1;
+    display: block;
+  }
+
+  .vic-q-time .period {
+    font-family: 'Inter', sans-serif;
+    font-size: 9px;
+    line-height: 1;
+    display: block;
     margin-top: 2px;
   }
 
-  /* Table */
-  .pid-table {
-    width: 100%;
-    border-collapse: collapse;
-  }
-
-  .pid-table th {
+  .vic-q-time .label {
     font-family: 'Inter', sans-serif;
-    text-align: left;
-    padding: 4px 5px;
-    font-size: 9px;
-    font-weight: 600;
+    font-size: 7px;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
-    letter-spacing: 0.4px;
-    color: var(--gray-30, #666);
-    border-bottom: 1px solid var(--gray-15, #333);
+    color: var(--gray-65, #ccc);
+    margin-top: 3px;
+    display: block;
   }
 
-  .pid-table th:last-child { text-align: right; }
+  .vic-q-services {
+    margin-top: 4px;
+    flex: 1;
+    min-height: 0;
+  }
 
-  .pid-table td {
-    font-family: 'Inter', sans-serif;
-    padding: 5px;
-    font-size: 12px;
-    font-weight: 400;
-    color: var(--black);
+  .vic-q-service {
+    display: flex;
+    align-items: center;
+    gap: 5px;
     border-bottom: 1px solid var(--gray-65, #ccc);
-    vertical-align: middle;
+    padding: 4px 0;
   }
 
-  .pid-table td:last-child { text-align: right; }
+  .vic-q-line {
+    width: 3px;
+    height: 18px;
+    background: var(--black);
+    flex: 0 0 auto;
+  }
 
-  .pid-badge {
+  .vic-q-sch {
+    font-family: 'Inter', sans-serif;
+    font-size: 10px;
+    color: var(--gray-25, #555);
+    white-space: nowrap;
+    flex: 0 0 auto;
+  }
+
+  .vic-q-service-dest {
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+    flex: 1;
+  }
+
+  .vic-q-est {
     background: var(--black);
     color: var(--white);
-    padding: 2px 7px;
     font-family: 'Inter', sans-serif;
-    font-size: 11px;
-    font-weight: 500;
-    display: inline-block;
+    font-size: 10px;
+    padding: 2px 6px;
+    line-height: 1;
     white-space: nowrap;
+    flex: 0 0 auto;
+  }
+
+  .vic-q-empty {
+    margin: auto;
+    font-family: 'Inter', sans-serif;
+    color: var(--gray-25, #555);
+    font-size: 18px;
+    text-align: center;
   }
 </style>
 
 <div class="layout layout--col layout--stretch-x">
-  {% if departures %}
-  <div class="pid-header">
-    <div class="pid-header-row">
-      <div class="pid-header-info">
-        <div class="pid-dest">{{ departures[0].destination }}</div>
-        <div class="pid-meta">{% if departures[0].train_type == "Ltd Express" %}Ltd Express{% else %}Stops All{% endif %} · Plat {{ departures[0].platform }}</div>
+  <div class="vic-q">
+    <div class="vic-q-marker"></div>
+    {% if departures %}
+    {% set lead = departures[0] %}
+    {% set lead_time = lead.scheduled_time.split(' ') %}
+    <section class="vic-q-next">
+      <div class="vic-q-row">
+        <div class="vic-q-left">
+          <div class="vic-q-dest">{{ lead.destination }}</div>
+          <div class="vic-q-meta">{% if lead.train_type == "Ltd Express" %}Limited Express{% else %}Stops All{% endif %} · P{{ lead.platform }}</div>
+        </div>
+        <div class="vic-q-time">
+          <span class="value">{{ lead_time[0] }}</span>
+          <span class="period">{% if lead_time|length > 1 %}{{ lead_time[1] }}{% endif %}</span>
+          <span class="label">Sched</span>
+        </div>
       </div>
-      {% set t = departures[0].estimated_time.split(' ') %}
-      <div class="pid-countdown">
-        <span class="time">{{ t[0] }}</span>
-        <span class="period">{{ t[1] }}</span>
-      </div>
-    </div>
-  </div>
+    </section>
 
-  {% if departures|length > 1 %}
-  <div style="overflow:hidden;width:100%;flex:1;">
-    <table class="pid-table">
-      <thead>
-        <tr>
-          <th>Time</th>
-          <th>Dest</th>
-          <th>Plat</th>
-          <th>Departs</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for dep in departures[1:] %}
-        <tr>
-          <td>{{ dep.scheduled_time }}</td>
-          <td>{{ dep.destination }}</td>
-          <td>{{ dep.platform }}</td>
-          <td><span class="pid-badge">{{ dep.estimated_time }}</span></td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+    <div class="vic-q-services">
+      {% for dep in departures[1:4] %}
+      <article class="vic-q-service">
+        <span class="vic-q-line"></span>
+        <span class="vic-q-sch">{{ dep.scheduled_time }}</span>
+        <span class="vic-q-service-dest">{{ dep.destination }}</span>
+        <span class="vic-q-est">{{ dep.estimated_time }}</span>
+      </article>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="vic-q-empty">No departures available</div>
+    {% endif %}
   </div>
-  {% endif %}
-  {% endif %}
 </div>
 
 <div class="title_bar">
   <img class="image" src="https://cdn.getminted.cc/transitvic_black.png" />
   <span class="title">{{ station_name }}</span>
-  <span class="instance">Updated {{ updated_at }}</span>
+  <span class="instance">{% if updated_label is defined %}{{ updated_label }}{% else %}Updated {{ updated_at }}{% endif %}</span>
 </div>
