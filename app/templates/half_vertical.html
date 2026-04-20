@@ -37,7 +37,7 @@
     margin-top: 2px;
   }
 
-  .pid-countdown {
+  .pid-scheduled {
     background: var(--black);
     color: var(--white);
     padding: 7px 14px;
@@ -50,17 +50,26 @@
     margin-left: 6px;
   }
 
-  .pid-countdown .time {
+  .pid-scheduled .time {
     font-family: 'Inter', sans-serif;
     font-size: 22px;
-    font-weight: 600;
+    font-weight: 700;
   }
 
-  .pid-countdown .period {
+  .pid-scheduled .period {
     font-family: 'Inter', sans-serif;
     font-size: 12px;
     font-weight: 400;
     margin-top: 3px;
+  }
+
+  .pid-scheduled .label {
+    font-family: 'Inter', sans-serif;
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-top: 4px;
+    color: var(--gray-65, #ccc);
   }
 
   /* Stopping pattern */
@@ -192,16 +201,18 @@
 
 <div class="layout layout--col layout--stretch-x">
   {% if departures %}
+  {% set lead = departures[0] %}
+  {% set lead_time = lead.scheduled_time.split(' ') %}
   <div class="pid-header">
     <div class="pid-header-row">
       <div class="pid-header-info">
-        <div class="pid-dest">{{ departures[0].destination }}</div>
-        <div class="pid-meta">{% if departures[0].train_type == "Ltd Express" %}Ltd Express{% else %}Stops All{% endif %} · Plat {{ departures[0].platform }}</div>
+        <div class="pid-dest">{{ lead.destination }}</div>
+        <div class="pid-meta">{% if lead.train_type == "Ltd Express" %}Ltd Express{% else %}Stops All{% endif %} · Plat {{ lead.platform }}</div>
       </div>
-      {% set t = departures[0].estimated_time.split(' ') %}
-      <div class="pid-countdown">
-        <span class="time">{{ t[0] }}</span>
-        <span class="period">{{ t[1] }}</span>
+      <div class="pid-scheduled">
+        <span class="time">{{ lead_time[0] }}</span>
+        <span class="period">{% if lead_time|length > 1 %}{{ lead_time[1] }}{% endif %}</span>
+        <span class="label">Sched</span>
       </div>
     </div>
   </div>
@@ -258,4 +269,5 @@
 <div class="title_bar">
   <img class="image" src="https://cdn.getminted.cc/transitvic_black.png" />
   <span class="title">{{ station_name }}</span>
+  <span class="instance">{% if updated_label is defined %}{{ updated_label }}{% else %}Updated {{ updated_at }}{% endif %}</span>
 </div>
