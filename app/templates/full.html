@@ -1,14 +1,5 @@
 <style>
-  .pid-full-shell {
-    width: 100%;
-    min-height: 0;
-  }
-
-  .pid-full-left,
-  .pid-full-right {
-    min-width: 0;
-  }
-
+  /* PID-specific styles that extend the TRMNL framework */
   .pid-header {
     border-top: 5px solid var(--black);
     padding: 14px 0 10px;
@@ -19,7 +10,6 @@
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    gap: 12px;
   }
 
   .pid-header-info {
@@ -33,10 +23,7 @@
     font-weight: 500;
     color: var(--black);
     letter-spacing: -1px;
-    line-height: 1.02;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    line-height: 1.1;
   }
 
   .pid-meta {
@@ -47,50 +34,32 @@
     margin-top: 4px;
   }
 
-  .pid-scheduled-box {
+  .pid-countdown {
     background: var(--black);
     color: var(--white);
-    padding: 8px 14px;
+    padding: 10px 22px;
     text-align: center;
     display: flex;
     flex-direction: column;
     align-items: center;
     line-height: 1;
     flex-shrink: 0;
-    min-width: 122px;
   }
 
-  .pid-scheduled-box .time {
+  .pid-countdown .time {
     font-family: 'Inter', sans-serif;
-    font-size: 32px;
-    font-weight: 700;
+    font-size: 34px;
+    font-weight: 600;
   }
 
-  .pid-scheduled-box .period {
+  .pid-countdown .period {
     font-family: 'Inter', sans-serif;
-    font-size: 14px;
+    font-size: 16px;
     font-weight: 400;
-    margin-top: 3px;
+    margin-top: 4px;
   }
 
-  .pid-scheduled-box .label {
-    font-family: 'Inter', sans-serif;
-    font-size: 10px;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    margin-top: 5px;
-    color: var(--gray-65, #ccc);
-  }
-
-  .pattern-default,
-  .pattern-x {
-    display: block;
-  }
-
-  .pattern-x {
-    display: none;
-  }
-
+  /* Stopping pattern */
   .stopping-pattern {
     display: flex;
     width: 100%;
@@ -162,19 +131,18 @@
     padding-right: 4px;
   }
 
+  /* Express stops */
   .stop-row.is-express .stop-track-line { background: var(--gray-60, #bbb); }
   .stop-row.is-express .stop-track-dot { background: var(--gray-75, #f2f2f2); border: 2px solid var(--gray-60, #bbb); }
   .stop-row.is-express .stop-name { color: var(--gray-50, #999); }
+
+  /* Current stop */
   .stop-row.is-current { background: var(--gray-25, #555); }
   .stop-row.is-current .stop-track-line { background: var(--white); }
   .stop-row.is-current .stop-track-dot { background: var(--white); }
   .stop-row.is-current .stop-name { color: var(--white); }
 
-  .pid-table-wrap {
-    display: block;
-    margin-top: 8px;
-  }
-
+  /* Table */
   .pid-table {
     width: 100%;
     border-collapse: collapse;
@@ -192,227 +160,97 @@
     border-bottom: 2px solid var(--gray-15, #333);
   }
 
-  .pid-table th:last-child,
-  .pid-table td:last-child {
+  .pid-table th:last-child {
     text-align: right;
   }
 
   .pid-table td {
     font-family: 'Inter', sans-serif;
     padding: 10px 8px;
-    font-size: 16px;
+    font-size: 17px;
     font-weight: 500;
     color: var(--black);
     border-bottom: 1px solid var(--gray-65, #ccc);
     vertical-align: middle;
   }
 
-  .pid-time-pill {
+  .pid-table td:last-child {
+    text-align: right;
+  }
+
+  .pid-badge {
     background: var(--black);
     color: var(--white);
-    padding: 4px 10px;
+    padding: 4px 12px;
     font-family: 'Inter', sans-serif;
-    font-size: 14px;
+    font-size: 15px;
     font-weight: 500;
     display: inline-block;
     white-space: nowrap;
-  }
-
-  .pid-card-list {
-    display: none;
-    margin-top: 8px;
-  }
-
-  .pid-card {
-    border-bottom: 1px solid var(--gray-65, #ccc);
-    padding: 8px 0;
-  }
-
-  .pid-card-top {
-    display: flex;
-    justify-content: space-between;
-    gap: 10px;
-    align-items: center;
-  }
-
-  .pid-card-dest {
-    font-family: 'Inter', sans-serif;
-    font-size: 22px;
-    font-weight: 600;
-    line-height: 1.05;
-    letter-spacing: -0.5px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    min-width: 0;
-  }
-
-  .pid-card-time {
-    flex-shrink: 0;
-  }
-
-  .pid-card-meta {
-    font-family: 'Inter', sans-serif;
-    font-size: 13px;
-    color: var(--gray-25, #555);
-    margin-top: 3px;
-  }
-
-  @media (min-width: 1180px) {
-    .pid-full-shell {
-      display: grid;
-      grid-template-columns: minmax(0, 1.3fr) minmax(0, 0.95fr);
-      gap: 18px;
-      align-items: start;
-    }
-
-    .pid-full-right {
-      border-left: 2px solid var(--gray-60, #bbb);
-      padding-left: 14px;
-      min-height: 100%;
-    }
-
-    .pid-dest {
-      font-size: 62px;
-    }
-
-    .pid-scheduled-box {
-      min-width: 150px;
-      padding: 10px 14px;
-    }
-
-    .pid-scheduled-box .time {
-      font-size: 44px;
-    }
-
-    .pattern-default {
-      display: none;
-    }
-
-    .pattern-x {
-      display: block;
-    }
-
-    .pid-table-wrap {
-      display: none;
-    }
-
-    .pid-card-list {
-      display: block;
-    }
   }
 </style>
 
 <div class="layout layout--col layout--stretch-x">
   {% if departures %}
-  {% set lead = departures[0] %}
-  {% set lead_time = lead.scheduled_time.split(' ') %}
-  {% set pattern_default = stop_columns %}
-  {% if pattern_groups is defined and pattern_groups and pattern_groups.full %}
-    {% set pattern_default = pattern_groups.full %}
-  {% endif %}
-  {% set pattern_x = pattern_default %}
-  {% if pattern_groups is defined and pattern_groups and pattern_groups.extended %}
-    {% set pattern_x = pattern_groups.extended %}
-  {% endif %}
-
-  <div class="pid-full-shell">
-    <div class="pid-full-left">
-      <div class="pid-header">
-        <div class="pid-header-row">
-          <div class="pid-header-info">
-            <div class="pid-dest">{{ lead.destination }}</div>
-            <div class="pid-meta">{% if lead.train_type == "Ltd Express" %}Ltd Express{% else %}Stops All Stations{% endif %} · Platform {{ lead.platform }}</div>
-          </div>
-          <div class="pid-scheduled-box">
-            <span class="time">{{ lead_time[0] }}</span>
-            <span class="period">{% if lead_time|length > 1 %}{{ lead_time[1] }}{% endif %}</span>
-            <span class="label">Scheduled</span>
-          </div>
-        </div>
+  <div class="pid-header">
+    <div class="pid-header-row">
+      <div class="pid-header-info">
+        <div class="pid-dest">{{ departures[0].destination }}</div>
+        <div class="pid-meta">{% if departures[0].train_type == "Ltd Express" %}Ltd Express{% else %}Stops All Stations{% endif %} · Platform {{ departures[0].platform }}</div>
       </div>
-
-      {% if pattern_default %}
-      <div class="stopping-pattern pattern-default">
-        {% for column in pattern_default %}
-        <div class="stop-col">
-          <div class="stop-track-cap"></div>
-          {% for stop in column %}
-          <div class="stop-row {% if stop.is_current %}is-current{% elif stop.is_express %}is-express{% endif %}">
-            <div class="stop-track">
-              <div class="stop-track-line"></div>
-              <div class="stop-track-dot"></div>
-            </div>
-            <span class="stop-name">{{ stop.name }}</span>
-          </div>
-          {% endfor %}
-          <div class="stop-track-cap"></div>
-        </div>
-        {% endfor %}
+      {% set t = departures[0].estimated_time.split(' ') %}
+      <div class="pid-countdown">
+        <span class="time">{{ t[0] }}</span>
+        <span class="period">{{ t[1] }}</span>
       </div>
-      {% endif %}
-
-      {% if pattern_x %}
-      <div class="stopping-pattern pattern-x">
-        {% for column in pattern_x %}
-        <div class="stop-col">
-          <div class="stop-track-cap"></div>
-          {% for stop in column %}
-          <div class="stop-row {% if stop.is_current %}is-current{% elif stop.is_express %}is-express{% endif %}">
-            <div class="stop-track">
-              <div class="stop-track-line"></div>
-              <div class="stop-track-dot"></div>
-            </div>
-            <span class="stop-name">{{ stop.name }}</span>
-          </div>
-          {% endfor %}
-          <div class="stop-track-cap"></div>
-        </div>
-        {% endfor %}
-      </div>
-      {% endif %}
     </div>
+  </div>
+  {% endif %}
 
-    <div class="pid-full-right">
-      {% if departures|length > 1 %}
-      <div class="pid-table-wrap">
-        <table class="pid-table">
-          <thead>
-            <tr>
-              <th>Time</th>
-              <th>Destination</th>
-              <th>Type</th>
-              <th>Plat</th>
-              <th>Expected</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for dep in departures[1:] %}
-            <tr>
-              <td>{{ dep.scheduled_time }}</td>
-              <td>{{ dep.destination }}</td>
-              <td>{{ dep.train_type }}</td>
-              <td>{{ dep.platform }}</td>
-              <td><span class="pid-time-pill">{{ dep.estimated_time }}</span></td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
+  {% if stop_columns %}
+  <div class="stopping-pattern">
+    {% for column in stop_columns %}
+    <div class="stop-col">
+      <div class="stop-track-cap"></div>
+      {% for stop in column %}
+      <div class="stop-row {% if stop.is_current %}is-current{% elif stop.is_express %}is-express{% endif %}">
+        <div class="stop-track">
+          <div class="stop-track-line"></div>
+          <div class="stop-track-dot"></div>
+        </div>
+        <span class="stop-name">{{ stop.name }}</span>
       </div>
-
-      <div class="pid-card-list">
-        {% for dep in departures[1:4] %}
-        <article class="pid-card">
-          <div class="pid-card-top">
-            <div class="pid-card-dest">{{ dep.destination }}</div>
-            <div class="pid-card-time"><span class="pid-time-pill">{{ dep.scheduled_time }}</span></div>
-          </div>
-          <div class="pid-card-meta">{{ dep.train_type }} · Platform {{ dep.platform }} · Expected {{ dep.estimated_time }}</div>
-        </article>
-        {% endfor %}
-      </div>
-      {% endif %}
+      {% endfor %}
+      <div class="stop-track-cap"></div>
     </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  {% if departures|length > 1 %}
+  <div style="overflow:hidden;width:100%;flex:1;">
+    <table class="pid-table">
+      <thead>
+        <tr>
+          <th>Time</th>
+          <th>Destination</th>
+          <th>Type</th>
+          <th>Plat</th>
+          <th>Departs</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for dep in departures[1:] %}
+        <tr>
+          <td>{{ dep.scheduled_time }}</td>
+          <td>{{ dep.destination }}</td>
+          <td>{{ dep.train_type }}</td>
+          <td>{{ dep.platform }}</td>
+          <td><span class="pid-badge">{{ dep.estimated_time }}</span></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
   </div>
   {% endif %}
 </div>
@@ -420,5 +258,4 @@
 <div class="title_bar">
   <img class="image" src="https://cdn.getminted.cc/transitvic_black.png" />
   <span class="title">{{ station_name }}</span>
-  <span class="instance">{% if updated_label is defined %}{{ updated_label }}{% else %}Updated {{ updated_at }}{% endif %}</span>
 </div>
