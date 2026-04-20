@@ -1,25 +1,26 @@
 <style>
-  /* PID-specific styles for half-vertical (400×480) */
+  /* PID-specific styles for quadrant with stopping pattern (400×240) */
   .pid-header {
-    border-top: 4px solid var(--black);
-    padding: 10px 0 8px;
+    border-top: 3px solid var(--black);
+    padding: 5px 0 4px;
     width: 100%;
   }
 
   .pid-header-row {
     display: flex;
     justify-content: space-between;
-    align-items: flex-start;
+    align-items: center;
   }
 
   .pid-header-info {
     flex: 1;
     min-width: 0;
+    padding-right: 6px;
   }
 
   .pid-dest {
     font-family: 'Inter', sans-serif;
-    font-size: 28px;
+    font-size: 20px;
     font-weight: 500;
     color: var(--black);
     letter-spacing: -0.5px;
@@ -31,55 +32,46 @@
 
   .pid-meta {
     font-family: 'Inter', sans-serif;
-    font-size: 12px;
+    font-size: 10px;
     font-weight: 400;
     color: var(--gray-25, #555);
-    margin-top: 2px;
+    margin-top: 1px;
   }
 
   .pid-countdown {
     background: var(--black);
     color: var(--white);
-    padding: 7px 14px;
+    padding: 4px 9px;
     text-align: center;
     display: flex;
     flex-direction: column;
     align-items: center;
     line-height: 1;
     flex-shrink: 0;
-    margin-left: 6px;
   }
 
   .pid-countdown .time {
     font-family: 'Inter', sans-serif;
-    font-size: 22px;
+    font-size: 17px;
     font-weight: 600;
   }
 
   .pid-countdown .period {
     font-family: 'Inter', sans-serif;
-    font-size: 12px;
+    font-size: 10px;
     font-weight: 400;
-    margin-top: 3px;
+    margin-top: 2px;
   }
 
-  /* Stopping pattern */
+  /* Single-column stopping pattern */
   .stopping-pattern {
-    display: flex;
+    flex: 1;
     width: 100%;
     background: var(--gray-75, #f2f2f2);
     border-top: 1px solid var(--gray-60, #bbb);
     border-bottom: 1px solid var(--gray-60, #bbb);
-  }
-
-  .stop-col {
-    flex: 1;
+    overflow: hidden;
     padding: 3px 0;
-    min-width: 0;
-  }
-
-  .stop-col + .stop-col {
-    border-left: 2px solid var(--gray-50, #999);
   }
 
   .stop-track-cap {
@@ -92,7 +84,7 @@
   .stop-row {
     display: flex;
     align-items: center;
-    min-height: 18px;
+    min-height: 19px;
   }
 
   .stop-track {
@@ -135,59 +127,14 @@
     padding-right: 4px;
   }
 
-  /* Express stops */
   .stop-row.is-express .stop-track-line { background: var(--gray-60, #bbb); }
   .stop-row.is-express .stop-track-dot { background: var(--gray-75, #f2f2f2); border: 2px solid var(--gray-60, #bbb); }
   .stop-row.is-express .stop-name { color: var(--gray-50, #999); }
 
-  /* Current stop */
   .stop-row.is-current { background: var(--gray-25, #555); }
   .stop-row.is-current .stop-track-line { background: var(--white); }
   .stop-row.is-current .stop-track-dot { background: var(--white); }
   .stop-row.is-current .stop-name { color: var(--white); }
-
-  /* Table */
-  .pid-table {
-    width: 100%;
-    border-collapse: collapse;
-  }
-
-  .pid-table th {
-    font-family: 'Inter', sans-serif;
-    text-align: left;
-    padding: 5px 6px;
-    font-size: 10px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    color: var(--gray-30, #666);
-    border-bottom: 2px solid var(--gray-15, #333);
-  }
-
-  .pid-table th:last-child { text-align: right; }
-
-  .pid-table td {
-    font-family: 'Inter', sans-serif;
-    padding: 7px 6px;
-    font-size: 13px;
-    font-weight: 400;
-    color: var(--black);
-    border-bottom: 1px solid var(--gray-65, #ccc);
-    vertical-align: middle;
-  }
-
-  .pid-table td:last-child { text-align: right; }
-
-  .pid-badge {
-    background: var(--black);
-    color: var(--white);
-    padding: 3px 8px;
-    font-family: 'Inter', sans-serif;
-    font-size: 12px;
-    font-weight: 500;
-    display: inline-block;
-    white-space: nowrap;
-  }
 </style>
 
 <div class="layout layout--col layout--stretch-x">
@@ -209,48 +156,17 @@
 
   {% if stop_columns %}
   <div class="stopping-pattern">
-    {% for column in stop_columns %}
-    {% if loop.index <= 2 %}
-    <div class="stop-col">
-      <div class="stop-track-cap"></div>
-      {% for stop in column %}
-      <div class="stop-row {% if stop.is_current %}is-current{% elif stop.is_express %}is-express{% endif %}">
-        <div class="stop-track">
-          <div class="stop-track-line"></div>
-          <div class="stop-track-dot"></div>
-        </div>
-        <span class="stop-name">{{ stop.name }}</span>
+    <div class="stop-track-cap"></div>
+    {% for stop in stop_columns[0] %}
+    <div class="stop-row {% if stop.is_current %}is-current{% elif stop.is_express %}is-express{% endif %}">
+      <div class="stop-track">
+        <div class="stop-track-line"></div>
+        <div class="stop-track-dot"></div>
       </div>
-      {% endfor %}
-      <div class="stop-track-cap"></div>
+      <span class="stop-name">{{ stop.name }}</span>
     </div>
-    {% endif %}
     {% endfor %}
-  </div>
-  {% endif %}
-
-  {% if departures|length > 1 %}
-  <div style="overflow:hidden;width:100%;flex:1;">
-    <table class="pid-table">
-      <thead>
-        <tr>
-          <th>Time</th>
-          <th>Dest</th>
-          <th>Plat</th>
-          <th>Departs</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for dep in departures[1:] %}
-        <tr>
-          <td>{{ dep.scheduled_time }}</td>
-          <td>{{ dep.destination }}</td>
-          <td>{{ dep.platform }}</td>
-          <td><span class="pid-badge">{{ dep.estimated_time }}</span></td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+    <div class="stop-track-cap"></div>
   </div>
   {% endif %}
 </div>
@@ -258,4 +174,5 @@
 <div class="title_bar">
   <img class="image" src="https://cdn.getminted.cc/transitvic_black.png" />
   <span class="title">{{ station_name }}</span>
+  <span class="instance">Updated {{ updated_at }}</span>
 </div>
