@@ -5,7 +5,7 @@
     --border: var(--gray-60, #bbb);
     --muted: var(--gray-25, #555);
     --subtle: var(--gray-50, #999);
-    --type-title: 52px;
+    --type-title: 44px;
     --type-time: 38px;
     --type-summary: 22px;
     --type-stop: 14px;
@@ -72,9 +72,9 @@
 
   .vic-destination {
     font-size: var(--type-title);
-    line-height: 0.94;
-    letter-spacing: -0.8px;
-    font-weight: 650;
+    line-height: 1;
+    letter-spacing: 0;
+    font-weight: 550;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -115,13 +115,6 @@
     line-height: 1.1;
     color: var(--muted);
     font-weight: 450;
-  }
-
-  .vic-summary-note {
-    margin-top: 4px;
-    font-size: 13px;
-    line-height: 1.2;
-    color: var(--subtle);
   }
 
   .vic-pattern {
@@ -320,9 +313,9 @@
 
   .vic-card-dest {
     font-size: 24px;
-    line-height: 0.96;
-    letter-spacing: -0.3px;
-    font-weight: 650;
+    line-height: 1;
+    letter-spacing: 0;
+    font-weight: 550;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -354,7 +347,7 @@
 
   @media (min-width: 1180px) {
     .vic-pid {
-      --type-title: 60px;
+      --type-title: 50px;
       --type-time: 44px;
       --type-summary: 24px;
     }
@@ -399,15 +392,6 @@
       {% if pattern_groups is defined and pattern_groups and pattern_groups.extended %}
       {% set pattern_x = pattern_groups.extended %}
       {% endif %}
-      {% set express_vis = namespace(found=false) %}
-      {% for col in pattern_x %}
-        {% for stop in col %}
-          {% if stop.is_express %}
-            {% set express_vis.found = true %}
-          {% endif %}
-        {% endfor %}
-      {% endfor %}
-
       <div class="vic-layout">
         <section class="vic-next">
           <div class="vic-next-row">
@@ -421,15 +405,6 @@
             </div>
           </div>
           <div class="vic-summary">{% if lead.train_type == "Ltd Express" %}Limited Express{% else %}Stops All Stations{% endif %}</div>
-          {% if lead.is_express %}
-          <div class="vic-summary-note">
-            {% if express_vis.found %}
-            <span>Express sections are shown in lighter grey in the stopping pattern</span>
-            {% else %}
-            <span>Express section occurs beyond the visible stops</span>
-            {% endif %}
-          </div>
-          {% endif %}
         </section>
 
         {% if pattern_og %}
