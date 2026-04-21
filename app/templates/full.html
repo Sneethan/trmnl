@@ -5,6 +5,15 @@
     --border: var(--gray-60, #bbb);
     --muted: var(--gray-25, #555);
     --subtle: var(--gray-50, #999);
+    --type-title: 52px;
+    --type-time: 38px;
+    --type-summary: 22px;
+    --type-stop: 14px;
+    --type-row-time: 15px;
+    --type-row-dest: 15px;
+    --type-row-meta: 14px;
+    font-family: 'Inter', sans-serif;
+    font-variant-numeric: tabular-nums;
     width: 100%;
     height: 100%;
     min-height: 0;
@@ -55,19 +64,17 @@
   }
 
   .vic-sch-time {
-    font-family: 'Inter', sans-serif;
-    font-size: 42px;
+    font-size: var(--type-time);
     line-height: 1;
     font-weight: 400;
     white-space: nowrap;
   }
 
   .vic-destination {
-    font-family: 'Inter', sans-serif;
-    font-size: 56px;
-    line-height: 0.95;
-    letter-spacing: -1px;
-    font-weight: 700;
+    font-size: var(--type-title);
+    line-height: 0.94;
+    letter-spacing: -0.8px;
+    font-weight: 650;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -85,11 +92,10 @@
     text-align: center;
     background: var(--line-colour);
     color: var(--white);
-    font-family: 'Inter', sans-serif;
-    font-size: 24px;
+    font-size: 22px;
     line-height: 1;
     font-weight: 600;
-    padding: 10px 8px;
+    padding: 9px 8px;
   }
 
   .vic-expected {
@@ -97,20 +103,25 @@
     text-align: center;
     background: var(--black);
     color: var(--white);
-    font-family: 'Inter', sans-serif;
-    font-size: 22px;
+    font-size: 20px;
     line-height: 1;
     font-weight: 500;
-    padding: 11px 10px;
+    padding: 10px 10px;
   }
 
   .vic-summary {
     margin-top: 6px;
-    font-family: 'Inter', sans-serif;
-    font-size: 24px;
+    font-size: var(--type-summary);
     line-height: 1.1;
     color: var(--muted);
-    font-weight: 400;
+    font-weight: 450;
+  }
+
+  .vic-summary-note {
+    margin-top: 4px;
+    font-size: 13px;
+    line-height: 1.2;
+    color: var(--subtle);
   }
 
   .vic-pattern {
@@ -179,15 +190,18 @@
   }
 
   .vic-stop-name {
-    font-family: 'Inter', sans-serif;
-    font-size: 14px;
-    font-weight: 400;
+    font-size: var(--type-stop);
+    font-weight: 450;
     line-height: 1.1;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
     color: var(--black);
     padding-right: 4px;
+  }
+
+  .vic-stop-copy {
+    min-width: 0;
   }
 
   .vic-stop.is-current {
@@ -204,16 +218,22 @@
   }
 
   .vic-stop.is-express .vic-track-line {
-    background: var(--subtle);
+    background: repeating-linear-gradient(
+      to bottom,
+      var(--gray-45, #8f8f8f) 0,
+      var(--gray-45, #8f8f8f) 4px,
+      transparent 4px,
+      transparent 7px
+    );
   }
 
   .vic-stop.is-express .vic-track-dot {
     background: var(--surface);
-    border: 2px solid var(--subtle);
+    border: 2px solid var(--gray-45, #8f8f8f);
   }
 
   .vic-stop.is-express .vic-stop-name {
-    color: var(--subtle);
+    color: var(--gray-40, #a3a3a3);
   }
 
   .vic-stop.is-terminal .vic-track-dot {
@@ -234,7 +254,6 @@
 
   .vic-following-table th {
     text-align: left;
-    font-family: 'Inter', sans-serif;
     font-size: 11px;
     text-transform: uppercase;
     letter-spacing: 0.06em;
@@ -244,8 +263,7 @@
   }
 
   .vic-following-table td {
-    font-family: 'Inter', sans-serif;
-    font-size: 16px;
+    font-size: var(--type-row-dest);
     font-weight: 500;
     border-bottom: 1px solid var(--border);
     padding: 9px 8px;
@@ -272,6 +290,8 @@
     text-align: center;
     padding: 4px 10px;
     line-height: 1;
+    font-size: var(--type-row-time);
+    font-weight: 500;
   }
 
   .vic-card-list {
@@ -292,19 +312,17 @@
   }
 
   .vic-card-time {
-    font-family: 'Inter', sans-serif;
-    font-size: 24px;
+    font-size: 20px;
     line-height: 1;
     font-weight: 400;
     flex: 0 0 auto;
   }
 
   .vic-card-dest {
-    font-family: 'Inter', sans-serif;
-    font-size: 30px;
-    line-height: 0.95;
-    letter-spacing: -0.5px;
-    font-weight: 700;
+    font-size: 24px;
+    line-height: 0.96;
+    letter-spacing: -0.3px;
+    font-weight: 650;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -318,8 +336,7 @@
 
   .vic-card-meta {
     margin-top: 4px;
-    font-family: 'Inter', sans-serif;
-    font-size: 14px;
+    font-size: var(--type-row-meta);
     color: var(--muted);
     line-height: 1.1;
   }
@@ -330,19 +347,24 @@
     align-items: center;
     justify-content: center;
     text-align: center;
-    font-family: 'Inter', sans-serif;
     font-size: 34px;
     line-height: 1.1;
     color: var(--muted);
   }
 
   @media (min-width: 1180px) {
+    .vic-pid {
+      --type-title: 60px;
+      --type-time: 44px;
+      --type-summary: 24px;
+    }
+
     .vic-destination {
-      font-size: 68px;
+      font-size: var(--type-title);
     }
 
     .vic-sch-time {
-      font-size: 48px;
+      font-size: var(--type-time);
     }
 
     .vic-pattern.pattern-og {
@@ -377,6 +399,14 @@
       {% if pattern_groups is defined and pattern_groups and pattern_groups.extended %}
       {% set pattern_x = pattern_groups.extended %}
       {% endif %}
+      {% set express_vis = namespace(found=false) %}
+      {% for col in pattern_x %}
+        {% for stop in col %}
+          {% if stop.is_express %}
+            {% set express_vis.found = true %}
+          {% endif %}
+        {% endfor %}
+      {% endfor %}
 
       <div class="vic-layout">
         <section class="vic-next">
@@ -391,6 +421,15 @@
             </div>
           </div>
           <div class="vic-summary">{% if lead.train_type == "Ltd Express" %}Limited Express{% else %}Stops All Stations{% endif %}</div>
+          {% if lead.is_express %}
+          <div class="vic-summary-note">
+            {% if express_vis.found %}
+            <span>Express sections are shown in lighter grey in the stopping pattern</span>
+            {% else %}
+            <span>Express section occurs beyond the visible stops</span>
+            {% endif %}
+          </div>
+          {% endif %}
         </section>
 
         {% if pattern_og %}
@@ -399,13 +438,15 @@
           <div class="vic-stop-col">
             <div class="vic-track-cap"></div>
             {% for stop in column %}
-            <div class="vic-stop {% if stop.is_current %}is-current{% elif stop.is_express %}is-express{% endif %}{% if stop.is_terminal is defined and stop.is_terminal %} is-terminal{% endif %}">
-              <div class="vic-track">
-                <div class="vic-track-line"></div>
-                <div class="vic-track-dot"></div>
+              <div class="vic-stop {% if stop.is_current %}is-current{% elif stop.is_express %}is-express{% endif %}{% if stop.is_terminal is defined and stop.is_terminal %} is-terminal{% endif %}">
+                <div class="vic-track">
+                  <div class="vic-track-line"></div>
+                  <div class="vic-track-dot"></div>
+                </div>
+                <div class="vic-stop-copy">
+                  <span class="vic-stop-name">{{ stop.name }}</span>
+                </div>
               </div>
-              <span class="vic-stop-name">{{ stop.name }}</span>
-            </div>
             {% endfor %}
             <div class="vic-track-cap"></div>
           </div>
@@ -419,13 +460,15 @@
           <div class="vic-stop-col">
             <div class="vic-track-cap"></div>
             {% for stop in column %}
-            <div class="vic-stop {% if stop.is_current %}is-current{% elif stop.is_express %}is-express{% endif %}{% if stop.is_terminal is defined and stop.is_terminal %} is-terminal{% endif %}">
-              <div class="vic-track">
-                <div class="vic-track-line"></div>
-                <div class="vic-track-dot"></div>
+              <div class="vic-stop {% if stop.is_current %}is-current{% elif stop.is_express %}is-express{% endif %}{% if stop.is_terminal is defined and stop.is_terminal %} is-terminal{% endif %}">
+                <div class="vic-track">
+                  <div class="vic-track-line"></div>
+                  <div class="vic-track-dot"></div>
+                </div>
+                <div class="vic-stop-copy">
+                  <span class="vic-stop-name">{{ stop.name }}</span>
+                </div>
               </div>
-              <span class="vic-stop-name">{{ stop.name }}</span>
-            </div>
             {% endfor %}
             <div class="vic-track-cap"></div>
           </div>
