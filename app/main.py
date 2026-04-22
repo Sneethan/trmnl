@@ -117,9 +117,6 @@ async def fetch_departure_data(
         stops = await ptv.get_stopping_pattern(
             run_ref=departures[0]["run_ref"],
             current_stop_id=stop_id,
-            route_id=departures[0].get("route_id"),
-            direction_id=departures[0].get("direction_id"),
-            is_express=departures[0].get("is_express", False),
         )
 
     pattern_stops = [
@@ -163,31 +160,25 @@ def _parse_platforms(raw: str | None) -> list[int] | None:
     return [int(p.strip()) for p in raw.split(",") if p.strip()]
 
 
-def _is_truthy_flag(value) -> bool:
-    if isinstance(value, bool):
-        return value
-    if value is None:
-        return False
-    return str(value).strip().lower() in {"1", "true", "yes", "y", "on"}
+async def _get_fresh_data(user: dict) -> dict:
+    """Return this user's departure data, using the DB cache when it is still
+    within their chosen refresh window and fetching from PTV otherwise."""
+    refresh_minutes = user.get("refresh_minutes") or 5
+    cache_updated_at = user.get("cache_updated_at")
 
-
-async def _get_fresh_data(user: dict, force_refresh: bool = False) -> dict:
-    """Fetch current departure data for a screen generation request.
-
-    TRMNL already controls screen generation cadence, and its force-refresh flow
-    does not document a forwarded force flag. Keep the DB payload as an outage
-    fallback instead of serving it ahead of a fresh PTV request.
-    """
-    platform_numbers = _parse_platforms(user.get("platform_numbers"))
-    try:
-        data = await fetch_departure_data(stop_id=user["stop_id"], platform_numbers=platform_numbers)
-    except Exception:
-        if not force_refresh:
+    if cache_updated_at:
+        last_fetch = datetime.fromisoformat(cache_updated_at)
+        if last_fetch.tzinfo is None:
+            last_fetch = last_fetch.replace(tzinfo=timezone.utc)
+        age_seconds = (datetime.now(timezone.utc) - last_fetch).total_seconds()
+        if age_seconds < refresh_minutes * 60:
             cached_json = user.get("cached_departures")
             if cached_json:
                 return json.loads(cached_json)
-        raise
 
+    # Cache miss or expired — fetch a fresh batch from PTV.
+    platform_numbers = _parse_platforms(user.get("platform_numbers"))
+    data = await fetch_departure_data(stop_id=user["stop_id"], platform_numbers=platform_numbers)
     data["station_name"] = user["station_name"]
     await db.set_cached_departures(user["uuid"], data)
     return data
@@ -409,7 +400,6 @@ async def trmnl_markup(request: Request):
     """
     # TRMNL sends form-encoded data, not JSON
     form = await request.form()
-    body = {}
     uuid = form.get("user_uuid")
 
     if not uuid:
@@ -427,24 +417,7 @@ async def trmnl_markup(request: Request):
     if not user:
         return JSONResponse({"error": "User not found"}, status_code=404)
 
-    force_refresh = any(
-        _is_truthy_flag(value)
-        for value in (
-            request.query_params.get("force_refresh"),
-            request.query_params.get("refresh"),
-            request.query_params.get("force"),
-            form.get("force_refresh"),
-            form.get("refresh"),
-            form.get("force"),
-            body.get("force_refresh"),
-            body.get("refresh"),
-            body.get("force"),
-            request.headers.get("x-trmnl-force-refresh"),
-            request.headers.get("x-force-refresh"),
-        )
-    )
-
-    data = await _get_fresh_data(user, force_refresh=force_refresh)
+    data = await _get_fresh_data(user)
     render_data = _build_render_context(data)
 
     # TRMNL expects these exact keys
@@ -460,14 +433,7 @@ async def trmnl_markup(request: Request):
         template = jinja_env.get_template(f"{template_name}.html")
         result[response_key] = template.render(**render_data)
 
-    return JSONResponse(
-        result,
-        headers={
-            "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
-            "Pragma": "no-cache",
-            "Expires": "0",
-        },
-    )
+    return result
 
 
 # ── Settings page ────────────────────────────────────────────────────────────

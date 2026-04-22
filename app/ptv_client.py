@@ -153,15 +153,7 @@ class PTVClient:
             for s in data.get("stops", [])
         ]
 
-    async def get_stopping_pattern(
-        self,
-        run_ref: str,
-        current_stop_id: int,
-        route_type: int = 0,
-        route_id: int | None = None,
-        direction_id: int | None = None,
-        is_express: bool = False,
-    ) -> list[dict]:
+    async def get_stopping_pattern(self, run_ref: str, current_stop_id: int, route_type: int = 0) -> list[dict]:
         """Get stopping pattern for a specific run.
 
         Makes two requests to the pattern endpoint:
@@ -222,29 +214,5 @@ class PTVClient:
                 "is_current": sid == current_stop_id,
                 "is_express": sid not in calling_ids,
             })
-
-        if is_express and route_id and direction_id and result and not any(stop["is_express"] for stop in result):
-            route_stops = await self.get_route_stops(
-                route_id=route_id,
-                direction_id=direction_id,
-                current_stop_id=current_stop_id,
-                route_type=route_type,
-            )
-            terminal_index = next(
-                (
-                    index
-                    for index in range(len(route_stops) - 1, -1, -1)
-                    if route_stops[index]["stop_id"] in calling_ids
-                ),
-                None,
-            )
-            if terminal_index is not None:
-                result = [
-                    {
-                        **stop,
-                        "is_express": stop["stop_id"] not in calling_ids,
-                    }
-                    for stop in route_stops[:terminal_index + 1]
-                ]
 
         return result
