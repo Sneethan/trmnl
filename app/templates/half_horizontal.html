@@ -1,287 +1,248 @@
 <style>
-  .vic-half {
+  /* Half-horizontal PID layout (800×240) — two-panel design */
+  .hh-wrap {
+    display: flex;
     width: 100%;
     height: 100%;
+    overflow: hidden;
+  }
+
+  /* ── LEFT PANEL (next departure + stopping pattern) ── */
+  .hh-left {
+    flex: 0 0 70%;
     display: flex;
     flex-direction: column;
-    min-height: 0;
-  }
-
-  .vic-half .line-marker {
-    height: 12px;
-    width: 100%;
-    background: var(--black);
-    flex: 0 0 auto;
-  }
-
-  .vic-half-body {
-    flex: 1;
-    min-height: 0;
-    display: flex;
-  }
-
-  .vic-half-left {
-    flex: 0 0 69%;
-    min-width: 0;
-    border-right: 2px solid var(--black);
     padding-right: 10px;
-    display: flex;
-    flex-direction: column;
+    border-right: 2px solid var(--black);
+    overflow: hidden;
+    min-width: 0;
   }
 
-  .vic-half-right {
+  /* Next departure header */
+  .hh-next {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 5px;
+    border-bottom: 1px solid var(--gray-60, #bbb);
+    flex-shrink: 0;
+  }
+
+  .hh-next-info {
     flex: 1;
     min-width: 0;
-    padding-left: 10px;
-    display: flex;
-    flex-direction: column;
   }
 
-  .vic-half-next {
-    margin-top: 6px;
-    border-bottom: 1px solid var(--gray-60, #bbb);
-    padding-bottom: 5px;
-  }
-
-  .vic-half-next-top {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 10px;
-  }
-
-  .vic-half-next-main {
-    display: flex;
-    align-items: baseline;
-    gap: 8px;
-    min-width: 0;
-  }
-
-  .vic-half-time {
+  .hh-dest {
     font-family: 'Inter', sans-serif;
-    font-size: 20px;
-    font-weight: 400;
-    white-space: nowrap;
-    line-height: 1;
-  }
-
-  .vic-half-dest {
-    font-family: 'Inter', sans-serif;
-    font-size: 30px;
+    font-size: 24px;
     font-weight: 700;
-    line-height: 0.95;
-    letter-spacing: -0.5px;
+    line-height: 1.1;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
   }
 
-  .vic-half-est {
-    flex: 0 0 auto;
-    background: var(--black);
-    color: var(--white);
+  .hh-meta {
     font-family: 'Inter', sans-serif;
-    font-size: 12px;
-    padding: 3px 7px;
-    white-space: nowrap;
-    line-height: 1.1;
-  }
-
-  .vic-half-meta {
-    margin-top: 2px;
+    font-size: 11px;
+    font-weight: 400;
     color: var(--gray-25, #555);
-    font-family: 'Inter', sans-serif;
-    font-size: 10px;
+    margin-top: 2px;
   }
 
-  .vic-half-pattern {
-    margin-top: 5px;
-    display: flex;
+  /* Stopping pattern grid */
+  .hh-stops {
     flex: 1;
-    min-height: 0;
-    border-top: 1px solid var(--gray-65, #ccc);
+    display: flex;
+    align-items: flex-start;
+    overflow: hidden;
+    margin-top: 5px;
+    gap: 0;
   }
 
-  .vic-half-col {
+  .hh-col {
     flex: 1;
     min-width: 0;
-    padding-left: 6px;
+    padding-left: 7px;
     border-left: 2px solid var(--gray-45, #888);
   }
 
-  .vic-half-col:first-child {
+  .hh-col:first-child {
     border-left: none;
     padding-left: 0;
   }
 
-  .vic-half-stop {
+  .hh-stop {
     font-family: 'Inter', sans-serif;
     font-size: 10.5px;
-    line-height: 1.5;
+    font-weight: 400;
+    line-height: 1.55;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    color: var(--black);
   }
 
-  .vic-half-stop.is-current {
+  .hh-stop.is-current {
+    font-weight: 700;
     background: var(--black);
     color: var(--white);
-    font-weight: 700;
     padding: 0 3px;
   }
 
-  .vic-half-stop.is-express {
+  .hh-stop.is-express {
     color: var(--gray-50, #999);
     font-style: italic;
   }
 
-  .vic-half-following {
+  /* ── RIGHT PANEL (following departures + clock) ── */
+  .hh-right {
     flex: 1;
-    min-height: 0;
     display: flex;
     flex-direction: column;
-    margin-top: 6px;
+    padding-left: 10px;
+    overflow: hidden;
+    min-width: 0;
   }
 
-  .vic-half-row {
+  .hh-following {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .hh-dep-row {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 3px 0;
     border-bottom: 1px solid var(--gray-65, #ccc);
-    padding: 4px 0;
+    overflow: hidden;
   }
 
-  .vic-half-row:last-child {
+  .hh-dep-row:last-child {
     border-bottom: none;
   }
 
-  .vic-half-row-top {
+  .hh-dep-top {
     display: flex;
     align-items: center;
-    gap: 6px;
+    justify-content: space-between;
+    gap: 4px;
   }
 
-  .vic-half-row-line {
-    width: 4px;
-    height: 20px;
-    background: var(--black);
-    flex: 0 0 auto;
-  }
-
-  .vic-half-row-time {
+  .hh-dep-time {
     font-family: 'Inter', sans-serif;
     font-size: 10px;
     color: var(--gray-25, #555);
     white-space: nowrap;
-    flex: 0 0 auto;
+    flex-shrink: 0;
   }
 
-  .vic-half-row-dest {
+  .hh-dep-dest {
     font-family: 'Inter', sans-serif;
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 700;
+    flex: 1;
+    min-width: 0;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    min-width: 0;
-    flex: 1;
   }
 
-  .vic-half-row-est {
+  .hh-dep-badge {
     background: var(--black);
     color: var(--white);
+    padding: 2px 7px;
     font-family: 'Inter', sans-serif;
-    font-size: 10px;
-    padding: 2px 6px;
+    font-size: 11px;
+    font-weight: 600;
     white-space: nowrap;
-    flex: 0 0 auto;
+    flex-shrink: 0;
   }
 
-  .vic-half-row-meta {
-    margin-left: 10px;
-    margin-top: 1px;
+  .hh-dep-type {
     font-family: 'Inter', sans-serif;
     font-size: 10px;
     color: var(--gray-25, #555);
+    margin-top: 1px;
   }
 
-  .vic-half-clock {
+  /* Clock */
+  .hh-clock {
     border: 2px solid var(--black);
     text-align: center;
-    margin-top: auto;
-    margin-bottom: 4px;
     padding: 4px 6px;
-    font-family: 'Inter', sans-serif;
-    font-size: 18px;
-    font-weight: 700;
-    line-height: 1;
+    flex-shrink: 0;
+    margin-top: 4px;
   }
 
-  .vic-half-empty {
-    margin: auto;
+  .hh-clock-time {
     font-family: 'Inter', sans-serif;
-    font-size: 24px;
-    color: var(--gray-25, #555);
+    font-size: 21px;
+    font-weight: 700;
+    line-height: 1;
   }
 </style>
 
 <div class="layout layout--col layout--stretch-x">
-  <div class="vic-half">
-    <div class="line-marker"></div>
-    {% if departures %}
-    {% set lead = departures[0] %}
-    {% set pattern_cols = stop_columns %}
-    {% if pattern_groups is defined and pattern_groups and pattern_groups.wide %}
-    {% set pattern_cols = pattern_groups.wide %}
-    {% endif %}
-    <div class="vic-half-body">
-      <div class="vic-half-left">
-        <div class="vic-half-next">
-          <div class="vic-half-next-top">
-            <div class="vic-half-next-main">
-              <span class="vic-half-time">{{ lead.scheduled_time }}</span>
-              <span class="vic-half-dest">{{ lead.destination }}</span>
-            </div>
-            <span class="vic-half-est">{{ lead.estimated_time }}</span>
-          </div>
-          <div class="vic-half-meta">{{ lead.train_type }} · Platform {{ lead.platform }}</div>
-        </div>
+  {% if departures %}
+  <div class="hh-wrap">
 
-        {% if pattern_cols %}
-        <div class="vic-half-pattern">
-          {% for col in pattern_cols %}
-          <div class="vic-half-col">
-            {% for stop in col %}
-            <div class="vic-half-stop {% if stop.is_current %}is-current{% elif stop.is_express %}is-express{% endif %}">{{ stop.name }}</div>
-            {% endfor %}
-          </div>
-          {% endfor %}
+    <!-- LEFT: next departure + stopping pattern -->
+    <div class="hh-left">
+      <div class="hh-next">
+        <div class="hh-next-info">
+          <div class="hh-dest">{{ departures[0].destination }}</div>
+          <div class="hh-meta">{{ departures[0].train_type }} · Platform {{ departures[0].platform }}</div>
         </div>
-        {% endif %}
       </div>
 
-      <div class="vic-half-right">
-        <div class="vic-half-following">
-          {% for dep in departures[1:3] %}
-          <article class="vic-half-row">
-            <div class="vic-half-row-top">
-              <span class="vic-half-row-line"></span>
-              <span class="vic-half-row-time">{{ dep.scheduled_time }}</span>
-              <span class="vic-half-row-dest">{{ dep.destination }}</span>
-              <span class="vic-half-row-est">{{ dep.estimated_time }}</span>
-            </div>
-            <div class="vic-half-row-meta">{{ dep.train_type }} · Platform {{ dep.platform }}</div>
-          </article>
+      {% if stop_columns %}
+      <div class="hh-stops">
+        {% for col in stop_columns %}
+        <div class="hh-col">
+          {% for stop in col %}
+          <div class="hh-stop {% if stop.is_current %}is-current{% elif stop.is_express %}is-express{% endif %}">
+            {{ stop.name }}
+          </div>
           {% endfor %}
         </div>
-        <div class="vic-half-clock">{{ updated_at }}</div>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- RIGHT: following departures + clock -->
+    <div class="hh-right">
+      <div class="hh-following">
+        {% for dep in departures[1:3] %}
+        <div class="hh-dep-row">
+          <div class="hh-dep-top">
+            <span class="hh-dep-time">{{ dep.scheduled_time }}</span>
+            <span class="hh-dep-dest">{{ dep.destination }}</span>
+            {% set t2 = dep.estimated_time.split(' ') %}
+            <span class="hh-dep-badge">{{ t2[0] }} {{ t2[1] }}</span>
+          </div>
+          <div class="hh-dep-type">{{ dep.train_type }}</div>
+        </div>
+        {% endfor %}
+      </div>
+
+      <div class="hh-clock">
+        <div class="hh-clock-time">{{ updated_at }}</div>
       </div>
     </div>
-    {% else %}
-    <div class="vic-half-empty">No departures available</div>
-    {% endif %}
+
   </div>
+  {% endif %}
 </div>
 
 <div class="title_bar">
   <img class="image" src="https://cdn.getminted.cc/transitvic_black.png" />
   <span class="title">{{ station_name }}</span>
-  <span class="instance">{% if updated_label is defined %}{{ updated_label }}{% else %}Updated {{ updated_at }}{% endif %}</span>
+  <span class="instance">Updated {{ updated_at }}</span>
 </div>
