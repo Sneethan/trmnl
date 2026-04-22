@@ -9,9 +9,9 @@
     --type-time: 38px;
     --type-summary: 22px;
     --type-stop: 14px;
-    --type-row-time: 15px;
-    --type-row-dest: 15px;
-    --type-row-meta: 14px;
+    --type-row-time: 13px;
+    --type-row-dest: 17px;
+    --type-row-meta: 13px;
     font-family: 'Inter', sans-serif;
     font-variant-numeric: tabular-nums;
     width: 100%;
@@ -58,16 +58,6 @@
   .vic-next-left {
     min-width: 0;
     flex: 1;
-    display: flex;
-    align-items: baseline;
-    gap: 10px;
-  }
-
-  .vic-sch-time {
-    font-size: var(--type-time);
-    line-height: 1;
-    font-weight: 400;
-    white-space: nowrap;
   }
 
   .vic-destination {
@@ -96,17 +86,6 @@
     line-height: 1;
     font-weight: 600;
     padding: 9px 8px;
-  }
-
-  .vic-expected {
-    min-width: 130px;
-    text-align: center;
-    background: var(--black);
-    color: var(--white);
-    font-size: 20px;
-    line-height: 1;
-    font-weight: 500;
-    padding: 10px 10px;
   }
 
   .vic-summary {
@@ -238,100 +217,66 @@
     font-weight: 600;
   }
 
-  .vic-following-table {
+  .vic-following-list {
     margin-top: 8px;
     width: 100%;
-    border-collapse: collapse;
-    table-layout: fixed;
+    border-top: 2px solid var(--line-colour);
   }
 
-  .vic-following-table th {
-    text-align: left;
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: var(--muted);
-    border-bottom: 2px solid var(--line-colour);
-    padding: 8px 8px;
-  }
-
-  .vic-following-table td {
-    font-size: var(--type-row-dest);
-    font-weight: 500;
+  .vic-following-row {
+    display: grid;
+    grid-template-columns: 3px 86px minmax(0, 1fr) 140px 108px;
+    align-items: center;
+    column-gap: 10px;
+    min-height: 40px;
+    padding: 6px 0;
     border-bottom: 1px solid var(--border);
-    padding: 9px 8px;
+  }
+
+  .vic-following-marker {
+    width: 3px;
+    align-self: stretch;
+    background: var(--line-colour);
+  }
+
+  .vic-following-time {
+    font-size: var(--type-row-time);
+    line-height: 1;
+    font-weight: 400;
     white-space: nowrap;
   }
 
-  .vic-following-table th:last-child,
-  .vic-following-table td:last-child {
-    text-align: right;
-  }
-
-  .vic-following-table td:nth-child(2) {
-    width: 36%;
-    max-width: 0;
+  .vic-following-dest {
+    font-size: var(--type-row-dest);
+    line-height: 1.05;
+    font-weight: 550;
+    white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    min-width: 0;
+  }
+
+  .vic-following-type {
+    font-size: var(--type-row-meta);
+    color: var(--muted);
+    line-height: 1;
+    white-space: nowrap;
+  }
+
+  .vic-following-est {
+    text-align: right;
   }
 
   .vic-est-pill {
     display: inline-block;
     background: var(--black);
     color: var(--white);
-    min-width: 96px;
+    min-width: 94px;
     text-align: center;
-    padding: 4px 10px;
+    padding: 4px 9px;
     line-height: 1;
     font-size: var(--type-row-time);
     font-weight: 500;
-  }
-
-  .vic-card-list {
-    display: none;
-    margin-top: 8px;
-    border-top: 2px solid var(--line-colour);
-  }
-
-  .vic-card {
-    padding: 10px 0;
-    border-bottom: 1px solid var(--border);
-  }
-
-  .vic-card-top {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .vic-card-time {
-    font-size: 20px;
-    line-height: 1;
-    font-weight: 400;
-    flex: 0 0 auto;
-  }
-
-  .vic-card-dest {
-    font-size: 24px;
-    line-height: 1;
-    letter-spacing: 0;
-    font-weight: 550;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    min-width: 0;
-    flex: 1;
-  }
-
-  .vic-card-est {
-    flex: 0 0 auto;
-  }
-
-  .vic-card-meta {
-    margin-top: 4px;
-    font-size: var(--type-row-meta);
-    color: var(--muted);
-    line-height: 1.1;
   }
 
   .vic-empty {
@@ -356,10 +301,6 @@
       font-size: var(--type-title);
     }
 
-    .vic-sch-time {
-      font-size: var(--type-time);
-    }
-
     .vic-pattern.pattern-og {
       display: none;
     }
@@ -368,12 +309,9 @@
       display: flex;
     }
 
-    .vic-following-table {
-      display: none;
-    }
-
-    .vic-card-list {
-      display: block;
+    .vic-following-row {
+      grid-template-columns: 3px 94px minmax(0, 1fr) 180px 118px;
+      min-height: 46px;
     }
   }
 </style>
@@ -396,12 +334,10 @@
         <section class="vic-next">
           <div class="vic-next-row">
             <div class="vic-next-left">
-              <span class="vic-sch-time">{{ lead.scheduled_time }}</span>
               <span class="vic-destination">{{ lead.destination }}</span>
             </div>
             <div class="vic-next-right">
               <span class="vic-platform">P{{ lead.platform }}</span>
-              <span class="vic-expected">{{ lead.estimated_time }}</span>
             </div>
           </div>
           <div class="vic-summary">{% if lead.train_type == "Ltd Express" %}Limited Express{% else %}Stops All Stations{% endif %}</div>
@@ -452,38 +388,14 @@
         {% endif %}
 
         {% if departures|length > 1 %}
-        <table class="vic-following-table">
-          <thead>
-            <tr>
-              <th>Time</th>
-              <th>Destination</th>
-              <th>Type</th>
-              <th>Plat</th>
-              <th>Expected</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for dep in departures[1:] %}
-            <tr>
-              <td>{{ dep.scheduled_time }}</td>
-              <td>{{ dep.destination }}</td>
-              <td>{{ dep.train_type }}</td>
-              <td>{{ dep.platform }}</td>
-              <td><span class="vic-est-pill">{{ dep.estimated_time }}</span></td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-
-        <div class="vic-card-list">
+        <div class="vic-following-list">
           {% for dep in departures[1:4] %}
-          <article class="vic-card">
-            <div class="vic-card-top">
-              <span class="vic-card-time">{{ dep.scheduled_time }}</span>
-              <span class="vic-card-dest">{{ dep.destination }}</span>
-              <span class="vic-card-est"><span class="vic-est-pill">{{ dep.estimated_time }}</span></span>
-            </div>
-            <div class="vic-card-meta">{{ dep.train_type }} · Platform {{ dep.platform }}</div>
+          <article class="vic-following-row">
+            <div class="vic-following-marker"></div>
+            <span class="vic-following-time">{{ dep.scheduled_time }}</span>
+            <span class="vic-following-dest">{{ dep.destination }}</span>
+            <span class="vic-following-type">{{ dep.train_type }} · Platform {{ dep.platform }}</span>
+            <span class="vic-following-est"><span class="vic-est-pill">{{ dep.estimated_time }}</span></span>
           </article>
           {% endfor %}
         </div>
