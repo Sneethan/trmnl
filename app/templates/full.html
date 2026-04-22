@@ -29,8 +29,12 @@
   .vic-layout {
     flex: 1;
     min-height: 0;
-    display: flex;
-    flex-direction: column;
+    display: block;
+  }
+
+  .vic-left,
+  .vic-right {
+    min-width: 0;
   }
 
   .vic-next {
@@ -229,7 +233,6 @@
     margin-top: 8px;
     width: 100%;
     border-collapse: collapse;
-    table-layout: fixed;
   }
 
   .vic-following-table th {
@@ -258,7 +261,7 @@
   }
 
   .vic-following-table td:nth-child(2) {
-    width: 36%;
+    width: 34%;
     max-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -337,6 +340,17 @@
   }
 
   @media (min-width: 1180px) {
+    .vic-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1.35fr) minmax(0, 0.92fr);
+      gap: 18px;
+    }
+
+    .vic-right {
+      border-left: 2px solid var(--border);
+      padding-left: 14px;
+    }
+
     .vic-destination {
       font-size: 68px;
     }
@@ -379,97 +393,101 @@
       {% endif %}
 
       <div class="vic-layout">
-        <section class="vic-next">
-          <div class="vic-next-row">
-            <div class="vic-next-left">
-              <span class="vic-sch-time">{{ lead.scheduled_time }}</span>
-              <span class="vic-destination">{{ lead.destination }}</span>
-            </div>
-            <div class="vic-next-right">
-              <span class="vic-platform">P{{ lead.platform }}</span>
-              <span class="vic-expected">{{ lead.estimated_time }}</span>
-            </div>
-          </div>
-          <div class="vic-summary">{% if lead.train_type == "Ltd Express" %}Limited Express{% else %}Stops All Stations{% endif %}</div>
-        </section>
-
-        {% if pattern_og %}
-        <section class="vic-pattern pattern-og">
-          {% for column in pattern_og %}
-          <div class="vic-stop-col">
-            <div class="vic-track-cap"></div>
-            {% for stop in column %}
-            <div class="vic-stop {% if stop.is_current %}is-current{% elif stop.is_express %}is-express{% endif %}{% if stop.is_terminal is defined and stop.is_terminal %} is-terminal{% endif %}">
-              <div class="vic-track">
-                <div class="vic-track-line"></div>
-                <div class="vic-track-dot"></div>
+        <div class="vic-left">
+          <section class="vic-next">
+            <div class="vic-next-row">
+              <div class="vic-next-left">
+                <span class="vic-sch-time">{{ lead.scheduled_time }}</span>
+                <span class="vic-destination">{{ lead.destination }}</span>
               </div>
-              <span class="vic-stop-name">{{ stop.name }}</span>
-            </div>
-            {% endfor %}
-            <div class="vic-track-cap"></div>
-          </div>
-          {% endfor %}
-        </section>
-        {% endif %}
-
-        {% if pattern_x %}
-        <section class="vic-pattern pattern-x">
-          {% for column in pattern_x %}
-          <div class="vic-stop-col">
-            <div class="vic-track-cap"></div>
-            {% for stop in column %}
-            <div class="vic-stop {% if stop.is_current %}is-current{% elif stop.is_express %}is-express{% endif %}{% if stop.is_terminal is defined and stop.is_terminal %} is-terminal{% endif %}">
-              <div class="vic-track">
-                <div class="vic-track-line"></div>
-                <div class="vic-track-dot"></div>
+              <div class="vic-next-right">
+                <span class="vic-platform">P{{ lead.platform }}</span>
+                <span class="vic-expected">{{ lead.estimated_time }}</span>
               </div>
-              <span class="vic-stop-name">{{ stop.name }}</span>
+            </div>
+            <div class="vic-summary">{% if lead.train_type == "Ltd Express" %}Limited Express{% else %}Stops All Stations{% endif %}</div>
+          </section>
+
+          {% if pattern_og %}
+          <section class="vic-pattern pattern-og">
+            {% for column in pattern_og %}
+            <div class="vic-stop-col">
+              <div class="vic-track-cap"></div>
+              {% for stop in column %}
+              <div class="vic-stop {% if stop.is_current %}is-current{% elif stop.is_express %}is-express{% endif %}{% if stop.is_terminal is defined and stop.is_terminal %} is-terminal{% endif %}">
+                <div class="vic-track">
+                  <div class="vic-track-line"></div>
+                  <div class="vic-track-dot"></div>
+                </div>
+                <span class="vic-stop-name">{{ stop.name }}</span>
+              </div>
+              {% endfor %}
+              <div class="vic-track-cap"></div>
             </div>
             {% endfor %}
-            <div class="vic-track-cap"></div>
-          </div>
-          {% endfor %}
-        </section>
-        {% endif %}
+          </section>
+          {% endif %}
 
-        {% if departures|length > 1 %}
-        <table class="vic-following-table">
-          <thead>
-            <tr>
-              <th>Time</th>
-              <th>Destination</th>
-              <th>Type</th>
-              <th>Plat</th>
-              <th>Expected</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for dep in departures[1:] %}
-            <tr>
-              <td>{{ dep.scheduled_time }}</td>
-              <td>{{ dep.destination }}</td>
-              <td>{{ dep.train_type }}</td>
-              <td>{{ dep.platform }}</td>
-              <td><span class="vic-est-pill">{{ dep.estimated_time }}</span></td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-
-        <div class="vic-card-list">
-          {% for dep in departures[1:4] %}
-          <article class="vic-card">
-            <div class="vic-card-top">
-              <span class="vic-card-time">{{ dep.scheduled_time }}</span>
-              <span class="vic-card-dest">{{ dep.destination }}</span>
-              <span class="vic-card-est"><span class="vic-est-pill">{{ dep.estimated_time }}</span></span>
+          {% if pattern_x %}
+          <section class="vic-pattern pattern-x">
+            {% for column in pattern_x %}
+            <div class="vic-stop-col">
+              <div class="vic-track-cap"></div>
+              {% for stop in column %}
+              <div class="vic-stop {% if stop.is_current %}is-current{% elif stop.is_express %}is-express{% endif %}{% if stop.is_terminal is defined and stop.is_terminal %} is-terminal{% endif %}">
+                <div class="vic-track">
+                  <div class="vic-track-line"></div>
+                  <div class="vic-track-dot"></div>
+                </div>
+                <span class="vic-stop-name">{{ stop.name }}</span>
+              </div>
+              {% endfor %}
+              <div class="vic-track-cap"></div>
             </div>
-            <div class="vic-card-meta">{{ dep.train_type }} · Platform {{ dep.platform }}</div>
-          </article>
-          {% endfor %}
+            {% endfor %}
+          </section>
+          {% endif %}
         </div>
-        {% endif %}
+
+        <div class="vic-right">
+          {% if departures|length > 1 %}
+          <table class="vic-following-table">
+            <thead>
+              <tr>
+                <th>Time</th>
+                <th>Destination</th>
+                <th>Type</th>
+                <th>Plat</th>
+                <th>Expected</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for dep in departures[1:] %}
+              <tr>
+                <td>{{ dep.scheduled_time }}</td>
+                <td>{{ dep.destination }}</td>
+                <td>{{ dep.train_type }}</td>
+                <td>{{ dep.platform }}</td>
+                <td><span class="vic-est-pill">{{ dep.estimated_time }}</span></td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+
+          <div class="vic-card-list">
+            {% for dep in departures[1:4] %}
+            <article class="vic-card">
+              <div class="vic-card-top">
+                <span class="vic-card-time">{{ dep.scheduled_time }}</span>
+                <span class="vic-card-dest">{{ dep.destination }}</span>
+                <span class="vic-card-est"><span class="vic-est-pill">{{ dep.estimated_time }}</span></span>
+              </div>
+              <div class="vic-card-meta">{{ dep.train_type }} · Platform {{ dep.platform }}</div>
+            </article>
+            {% endfor %}
+          </div>
+          {% endif %}
+        </div>
       </div>
       {% else %}
       <div class="vic-empty">No departures available</div>
