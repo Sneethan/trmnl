@@ -30,74 +30,6 @@ jinja_env = jinja2.Environment(
 )
 
 
-def _split_time_label(value: str) -> dict:
-    parts = value.split(" ", 1) if value else [""]
-    return {
-        "text": value,
-        "clock": parts[0],
-        "period": parts[1] if len(parts) > 1 else "",
-    }
-
-
-def _chunk_pattern_groups(stops: list[dict], per_column: int, max_columns: int) -> list[list[dict]]:
-    visible = stops[: per_column * max_columns]
-    return [
-        visible[index:index + per_column]
-        for index in range(0, len(visible), per_column)
-    ]
-
-
-def _build_service_view(departure: dict) -> dict:
-    service_label = "Limited express" if departure.get("is_express") else "Stops all stations"
-    platform = departure.get("platform")
-    return {
-        **departure,
-        "service_label": service_label,
-        "platform_label": f"Platform {platform}" if platform not in ("", None) else "",
-        "scheduled": _split_time_label(departure.get("scheduled_time", "")),
-        "estimated": _split_time_label(departure.get("estimated_time", "")),
-    }
-
-
-def _build_render_context(data: dict) -> dict:
-    departures = data.get("departures", [])
-    raw_stops = data.get("pattern_stops")
-
-    if raw_stops:
-        pattern_stops = [
-            {
-                **stop,
-                "is_terminal": index == len(raw_stops) - 1,
-            }
-            for index, stop in enumerate(raw_stops)
-        ]
-    else:
-        flattened = [stop for column in data.get("stop_columns", []) for stop in column]
-        pattern_stops = [
-            {
-                **stop,
-                "is_terminal": index == len(flattened) - 1,
-            }
-            for index, stop in enumerate(flattened)
-        ]
-
-    updated_at = data.get("updated_at", "")
-
-    return {
-        **data,
-        "lead_service": _build_service_view(departures[0]) if departures else None,
-        "following_services": [_build_service_view(dep) for dep in departures[1:]],
-        "pattern_groups": {
-            "extended": _chunk_pattern_groups(pattern_stops, per_column=8, max_columns=4),
-            "full": _chunk_pattern_groups(pattern_stops, per_column=6, max_columns=4),
-            "wide": _chunk_pattern_groups(pattern_stops, per_column=5, max_columns=3),
-            "compact": _chunk_pattern_groups(pattern_stops, per_column=5, max_columns=2),
-            "mini": _chunk_pattern_groups(pattern_stops, per_column=6, max_columns=1),
-        },
-        "updated_label": f"Updated {updated_at}" if updated_at else "Updated just now",
-    }
-
-
 async def fetch_departure_data(
     stop_id: int,
     platform_numbers: list[int] | None = None,
@@ -119,20 +51,12 @@ async def fetch_departure_data(
             current_stop_id=stop_id,
         )
 
-    pattern_stops = [
-        {
-            "name": s["name"],
-            "is_current": s["is_current"],
-            "is_express": s["is_express"],
-        }
-        for s in stops
-    ]
-
     per_col = 6
     max_cols = 4
     stop_columns = [
-        pattern_stops[i:i + per_col]
-        for i in range(0, min(len(pattern_stops), per_col * max_cols), per_col)
+        [{"name": s["name"], "is_current": s["is_current"], "is_express": s["is_express"]}
+         for s in stops[i:i + per_col]]
+        for i in range(0, min(len(stops), per_col * max_cols), per_col)
     ]
 
     return {
@@ -141,14 +65,12 @@ async def fetch_departure_data(
                 "destination": d["destination"],
                 "scheduled_time": d["scheduled_time"],
                 "estimated_time": d["estimated_time"],
-                "minutes_until": d["minutes_until"],
                 "platform": d["platform"],
                 "is_express": d["is_express"],
                 "train_type": d["train_type"],
             }
             for d in departures
         ],
-        "pattern_stops": pattern_stops,
         "stop_columns": stop_columns,
         "updated_at": datetime.now(timezone.utc).astimezone(ZoneInfo("Australia/Melbourne")).strftime("%I:%M %p").lstrip("0").lower(),
     }
@@ -195,7 +117,6 @@ async def push_departures_to_trmnl():
         platform_numbers=platform_numbers,
     )
     data["station_name"] = settings.station_name
-    data = _build_render_context(data)
 
     trmnl = TRMNLClient(settings.trmnl_webhook_url)
     await trmnl.push_data(data)
@@ -418,7 +339,6 @@ async def trmnl_markup(request: Request):
         return JSONResponse({"error": "User not found"}, status_code=404)
 
     data = await _get_fresh_data(user)
-    render_data = _build_render_context(data)
 
     # TRMNL expects these exact keys
     layout_map = {
@@ -431,7 +351,7 @@ async def trmnl_markup(request: Request):
     result = {}
     for response_key, template_name in layout_map.items():
         template = jinja_env.get_template(f"{template_name}.html")
-        result[response_key] = template.render(**render_data)
+        result[response_key] = template.render(**data)
 
     return result
 
