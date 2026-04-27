@@ -67,7 +67,7 @@
   .stopping-pattern {
     display: flex;
     width: 100%;
-    background: var(--gray-75, #f2f2f2);
+    background: transparent;
     border-top: 1px solid var(--gray-60, #bbb);
     border-bottom: 1px solid var(--gray-60, #bbb);
   }
@@ -136,7 +136,7 @@
   }
 
   .stop-row.is-express .stop-track-line { background: var(--gray-60, #bbb); }
-  .stop-row.is-express .stop-track-dot { background: var(--gray-75, #f2f2f2); border: 2px solid var(--gray-60, #bbb); }
+  .stop-row.is-express .stop-track-dot { background: transparent; border: 2px solid var(--gray-60, #bbb); }
   .stop-row.is-express .stop-name { color: var(--gray-50, #999); }
 
   .stop-row.is-current { background: var(--gray-25, #555); }
@@ -243,6 +243,7 @@
 
 <div class="layout layout--col layout--stretch-x">
   {% if departures %}
+
   <div class="pid-header">
     <div class="pid-header-row">
       <div class="pid-header-info">
@@ -256,7 +257,6 @@
       </div>
     </div>
   </div>
-  {% endif %}
 
   {% if stop_columns %}
   <div class="stopping-pattern">
@@ -302,6 +302,12 @@
         {% endfor %}
       </tbody>
     </table>
+  </div>
+  {% endif %}
+
+  {% else %}
+  <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;gap:8px;">
+    <span style="font-family:'Inter',sans-serif;font-size:16px;font-weight:400;color:var(--gray-25,#555);">No departures available</span>
   </div>
   {% endif %}
 </div>

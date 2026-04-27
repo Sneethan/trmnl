@@ -80,7 +80,13 @@ SQLite via aiosqlite. Single `users` table stores per-user: access_token, stop_i
 
 ### Templates
 
-Four TRMNL layout variants in `app/templates/`: `full.html` (800x480), `half_horizontal.html` (800x240), `half_vertical.html` (400x480), `quadrant.html` (400x240). `quadrant_stops.html` is an alternate quadrant layout focused on the stopping pattern. Plus `manage.html` for the settings page.
+Four TRMNL layout variants in `app/templates/`: `full.html` (800x480), `half_horizontal.html` (800x240), `half_vertical.html` (400x480), `quadrant.html` (400x240). Plus `manage.html` for the settings page.
+
+`full.html` contains **two layout blocks** inside a single `.layout` element:
+- `.pid-ls` (landscape) — default, multi-column stopping pattern + departure table
+- `.pid-pt` (portrait/escalator) — shown via `.screen--portrait`, single-column track-line stops + footer departures, modelled on Melbourne escalator PIDs
+
+CSS toggles between them via `.screen--portrait .pid-ls { display:none }` and `.screen--portrait .pid-pt { display:flex }`.
 
 Template variables: `departures` (list of dicts with destination, scheduled_time, platform, train_type, is_express), `stop_columns` (4 columns of 6 stops each with name, is_current, is_express), `station_name`, `updated_at`.
 
@@ -108,7 +114,11 @@ Templates use custom CSS `<style>` blocks. The TRMNL runtime applies device clas
 
 All templates include `.screen--lg` CSS overrides that scale up font sizes (~25-30%) for TRMNL V2/X. `full.html` and `half_horizontal.html` also mark rows 4+ as `dep-extra` (hidden by default, visible on `.screen--lg`) to show more departures on larger screens. We fetch 6 departures (`max_results=6`) so extra rows are always available.
 
+Stopping pattern background is `transparent` (not gray-75) to match real PIDs where the pattern blends with the screen background. Express stop track dots are also `transparent` with a border (hollow style).
+
 Gray names follow v3 convention: `gray-10` through `gray-75` (14 steps). Legacy `gray-1`–`gray-7` are deprecated.
+
+All templates include a no-departures fallback state. The stopping pattern fetch in `main.py` is wrapped in try/except so API failures degrade gracefully (departures still show, pattern is empty).
 
 ### Per-User Caching
 

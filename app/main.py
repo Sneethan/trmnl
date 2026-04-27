@@ -46,10 +46,13 @@ async def fetch_departure_data(
 
     stops = []
     if departures:
-        stops = await ptv.get_stopping_pattern(
-            run_ref=departures[0]["run_ref"],
-            current_stop_id=stop_id,
-        )
+        try:
+            stops = await ptv.get_stopping_pattern(
+                run_ref=departures[0]["run_ref"],
+                current_stop_id=stop_id,
+            )
+        except Exception:
+            pass  # Degrade gracefully — departures still shown without pattern
 
     per_col = 6
     max_cols = 4

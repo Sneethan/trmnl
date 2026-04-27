@@ -189,6 +189,22 @@
   /* Extra row only on lg */
   .hh-dep-row.dep-extra { display: none; }
 
+  /* Empty state */
+  .pid-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    gap: 6px;
+  }
+  .pid-empty-msg {
+    font-family: 'Inter', sans-serif;
+    font-size: 16px;
+    font-weight: 400;
+    color: var(--gray-25, #555);
+  }
+
   /* ── TRMNL V2/X (lg, 1024px+) ─────────────────────────────────────────── */
   .screen--lg .hh-dest {
     font-size: 32px;
@@ -233,6 +249,7 @@
 <div class="layout layout--col layout--stretch-x">
   {% if departures %}
   <div class="hh-wrap">
+
 
     <!-- LEFT: next departure + stopping pattern -->
     <div class="hh-left">
@@ -279,6 +296,10 @@
       </div>
     </div>
 
+  </div>
+  {% else %}
+  <div class="pid-empty">
+    <span class="pid-empty-msg">No departures available</span>
   </div>
   {% endif %}
 </div>

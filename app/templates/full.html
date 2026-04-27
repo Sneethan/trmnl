@@ -1,22 +1,54 @@
 <style>
-  .pid-header {
+  /* ── Shared empty state ──────────────────────────────────────────────────── */
+  .pid-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    gap: 10px;
+  }
+
+  .pid-empty-msg {
+    font-family: 'Inter', sans-serif;
+    font-size: 22px;
+    font-weight: 400;
+    color: var(--gray-25, #555);
+  }
+
+  .pid-empty-sub {
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    color: var(--gray-50, #999);
+  }
+
+  /* ── Layout toggle (landscape vs portrait) ───────────────────────────────── */
+  .pid-pt { display: none; width: 100%; }
+  .screen--portrait .pid-ls { display: none; }
+  .screen--portrait .pid-pt { display: flex; flex-direction: column; width: 100%; flex: 1; min-height: 0; }
+
+  /* ════════════════════════════════════════════════════════════════════════════
+     LANDSCAPE LAYOUT (TRMNL OG / V2 horizontal)
+     ════════════════════════════════════════════════════════════════════════════ */
+
+  .pid-ls .pid-header {
     border-top: 5px solid var(--black);
     padding: 14px 0 10px;
     width: 100%;
   }
 
-  .pid-header-row {
+  .pid-ls .pid-header-row {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
   }
 
-  .pid-header-info {
+  .pid-ls .pid-header-info {
     flex: 1;
     min-width: 0;
   }
 
-  .pid-dest {
+  .pid-ls .pid-dest {
     font-family: 'Inter', sans-serif;
     font-size: 48px;
     font-weight: 500;
@@ -25,7 +57,7 @@
     line-height: 1.1;
   }
 
-  .pid-meta {
+  .pid-ls .pid-meta {
     font-family: 'Inter', sans-serif;
     font-size: 18px;
     font-weight: 400;
@@ -33,7 +65,7 @@
     margin-top: 4px;
   }
 
-  .pid-countdown {
+  .pid-ls .pid-countdown {
     background: var(--black);
     color: var(--white);
     padding: 10px 22px;
@@ -45,52 +77,52 @@
     flex-shrink: 0;
   }
 
-  .pid-countdown .time {
+  .pid-ls .pid-countdown .time {
     font-family: 'Inter', sans-serif;
     font-size: 34px;
     font-weight: 600;
   }
 
-  .pid-countdown .period {
+  .pid-ls .pid-countdown .period {
     font-family: 'Inter', sans-serif;
     font-size: 16px;
     font-weight: 400;
     margin-top: 4px;
   }
 
-  /* Stopping pattern */
-  .stopping-pattern {
+  /* Stopping pattern (landscape) */
+  .pid-ls .stopping-pattern {
     display: flex;
     width: 100%;
-    background: var(--gray-75, #f2f2f2);
+    background: transparent;
     border-top: 1px solid var(--gray-60, #bbb);
     border-bottom: 1px solid var(--gray-60, #bbb);
   }
 
-  .stop-col {
+  .pid-ls .stop-col {
     flex: 1;
     padding: 4px 0;
     min-width: 0;
   }
 
-  .stop-col + .stop-col {
+  .pid-ls .stop-col + .stop-col {
     border-left: 2px solid var(--gray-50, #999);
   }
 
-  .stop-track-cap {
+  .pid-ls .stop-track-cap {
     height: 8px;
     width: 2px;
     background: var(--gray-25, #555);
     margin-left: 13px;
   }
 
-  .stop-row {
+  .pid-ls .stop-row {
     display: flex;
     align-items: center;
     min-height: 21px;
   }
 
-  .stop-track {
+  .pid-ls .stop-track {
     width: 28px;
     flex-shrink: 0;
     position: relative;
@@ -100,17 +132,15 @@
     justify-content: center;
   }
 
-  .stop-track-line {
+  .pid-ls .stop-track-line {
     position: absolute;
-    top: 0;
-    bottom: 0;
-    left: 50%;
+    top: 0; bottom: 0; left: 50%;
     transform: translateX(-50%);
     width: 2px;
     background: var(--gray-25, #555);
   }
 
-  .stop-track-dot {
+  .pid-ls .stop-track-dot {
     width: 8px;
     height: 8px;
     border-radius: 50%;
@@ -119,7 +149,7 @@
     z-index: 1;
   }
 
-  .stop-name {
+  .pid-ls .stop-name {
     font-family: 'Inter', sans-serif;
     font-size: 13px;
     font-weight: 400;
@@ -130,22 +160,22 @@
     padding-right: 4px;
   }
 
-  .stop-row.is-express .stop-track-line { background: var(--gray-60, #bbb); }
-  .stop-row.is-express .stop-track-dot { background: var(--gray-75, #f2f2f2); border: 2px solid var(--gray-60, #bbb); }
-  .stop-row.is-express .stop-name { color: var(--gray-50, #999); }
+  .pid-ls .stop-row.is-express .stop-track-line { background: var(--gray-60, #bbb); }
+  .pid-ls .stop-row.is-express .stop-track-dot { background: transparent; border: 2px solid var(--gray-60, #bbb); }
+  .pid-ls .stop-row.is-express .stop-name { color: var(--gray-50, #999); }
 
-  .stop-row.is-current { background: var(--gray-25, #555); }
-  .stop-row.is-current .stop-track-line { background: var(--white); }
-  .stop-row.is-current .stop-track-dot { background: var(--white); }
-  .stop-row.is-current .stop-name { color: var(--white); }
+  .pid-ls .stop-row.is-current { background: var(--gray-25, #555); }
+  .pid-ls .stop-row.is-current .stop-track-line { background: var(--white); }
+  .pid-ls .stop-row.is-current .stop-track-dot { background: var(--white); }
+  .pid-ls .stop-row.is-current .stop-name { color: var(--white); }
 
-  /* Table */
-  .pid-table {
+  /* Table (landscape) */
+  .pid-ls .pid-table {
     width: 100%;
     border-collapse: collapse;
   }
 
-  .pid-table th {
+  .pid-ls .pid-table th {
     font-family: 'Inter', sans-serif;
     text-align: left;
     padding: 8px;
@@ -157,9 +187,9 @@
     border-bottom: 2px solid var(--gray-15, #333);
   }
 
-  .pid-table th:last-child { text-align: right; }
+  .pid-ls .pid-table th:last-child { text-align: right; }
 
-  .pid-table td {
+  .pid-ls .pid-table td {
     font-family: 'Inter', sans-serif;
     padding: 10px 8px;
     font-size: 17px;
@@ -169,9 +199,9 @@
     vertical-align: middle;
   }
 
-  .pid-table td:last-child { text-align: right; }
+  .pid-ls .pid-table td:last-child { text-align: right; }
 
-  .pid-badge {
+  .pid-ls .pid-badge {
     background: var(--black);
     color: var(--white);
     padding: 4px 12px;
@@ -182,143 +212,372 @@
     white-space: nowrap;
   }
 
-  /* Extra rows only visible on lg screens */
   tr.dep-extra { display: none; }
 
-  /* ── TRMNL V2/X (lg, 1024px+) ─────────────────────────────────────────── */
-  .screen--lg .pid-header {
+  /* ── Landscape: TRMNL V2/X (lg) ─────────────────────────────────────── */
+  .screen--lg .pid-ls .pid-header {
     border-top-width: 7px;
     padding: 20px 0 14px;
   }
 
-  .screen--lg .pid-dest {
-    font-size: 64px;
-    letter-spacing: -1.5px;
+  .screen--lg .pid-ls .pid-dest { font-size: 64px; letter-spacing: -1.5px; }
+  .screen--lg .pid-ls .pid-meta { font-size: 23px; margin-top: 6px; }
+  .screen--lg .pid-ls .pid-countdown { padding: 13px 30px; }
+  .screen--lg .pid-ls .pid-countdown .time { font-size: 46px; }
+  .screen--lg .pid-ls .pid-countdown .period { font-size: 21px; margin-top: 6px; }
+
+  .screen--lg .pid-ls .stop-row { min-height: 27px; }
+  .screen--lg .pid-ls .stop-track { width: 34px; }
+  .screen--lg .pid-ls .stop-track-cap { height: 10px; margin-left: 16px; }
+  .screen--lg .pid-ls .stop-track-dot { width: 10px; height: 10px; }
+  .screen--lg .pid-ls .stop-name { font-size: 16px; }
+
+  .screen--lg .pid-ls .pid-table th { font-size: 13px; padding: 10px; }
+  .screen--lg .pid-ls .pid-table td { font-size: 21px; padding: 13px 10px; }
+  .screen--lg .pid-ls .pid-badge { font-size: 19px; padding: 5px 16px; }
+
+  .screen--lg tr.dep-extra { display: table-row; }
+
+  /* ════════════════════════════════════════════════════════════════════════════
+     PORTRAIT / ESCALATOR LAYOUT (TRMNL X portrait)
+     Modelled on Melbourne escalator-view PIDs: single-column stops with
+     a left-border track line, followed by a footer of subsequent services.
+     ════════════════════════════════════════════════════════════════════════════ */
+
+  /* Header */
+  .esc-header {
+    border-top: 5px solid var(--black);
+    padding: 14px 0 10px;
+    flex-shrink: 0;
   }
 
-  .screen--lg .pid-meta {
-    font-size: 23px;
-    margin-top: 6px;
-  }
-
-  .screen--lg .pid-countdown {
-    padding: 13px 30px;
-  }
-
-  .screen--lg .pid-countdown .time {
-    font-size: 46px;
-  }
-
-  .screen--lg .pid-countdown .period {
-    font-size: 21px;
-    margin-top: 6px;
-  }
-
-  .screen--lg .stop-row {
-    min-height: 27px;
-  }
-
-  .screen--lg .stop-track {
-    width: 34px;
-  }
-
-  .screen--lg .stop-track-cap {
-    height: 10px;
-    margin-left: 16px;
-  }
-
-  .screen--lg .stop-track-dot {
-    width: 10px;
-    height: 10px;
-  }
-
-  .screen--lg .stop-name {
+  .esc-sched {
+    font-family: 'Inter', sans-serif;
     font-size: 16px;
+    font-weight: 400;
+    color: var(--gray-25, #555);
+    margin-bottom: 4px;
   }
 
-  .screen--lg .pid-table th {
-    font-size: 13px;
-    padding: 10px;
+  .esc-dest-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 14px;
   }
 
-  .screen--lg .pid-table td {
-    font-size: 21px;
-    padding: 13px 10px;
+  .esc-dest {
+    font-family: 'Inter', sans-serif;
+    font-size: 52px;
+    font-weight: 700;
+    line-height: 1.0;
+    color: var(--black);
+    letter-spacing: -1.5px;
+    flex: 1;
+    min-width: 0;
   }
 
-  .screen--lg .pid-badge {
-    font-size: 19px;
-    padding: 5px 16px;
+  /* Platform + countdown stacked on the right */
+  .esc-plat-stack {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex-shrink: 0;
+    gap: 4px;
   }
 
-  .screen--lg tr.dep-extra {
-    display: table-row;
+  .esc-plat-box {
+    background: var(--black);
+    color: var(--white);
+    font-family: 'Inter', sans-serif;
+    font-size: 40px;
+    font-weight: 700;
+    width: 68px;
+    height: 68px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+  }
+
+  .esc-countdown {
+    background: var(--black);
+    color: var(--white);
+    font-family: 'Inter', sans-serif;
+    text-align: center;
+    padding: 5px 10px;
+    width: 68px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    line-height: 1;
+  }
+
+  .esc-countdown .time {
+    font-size: 17px;
+    font-weight: 600;
+  }
+
+  .esc-countdown .period {
+    font-size: 11px;
+    font-weight: 400;
+    margin-top: 3px;
+  }
+
+  .esc-type {
+    font-family: 'Inter', sans-serif;
+    font-size: 18px;
+    font-weight: 400;
+    color: var(--gray-25, #555);
+    margin-top: 8px;
+  }
+
+  /* Divider */
+  .esc-divider {
+    width: 100%;
+    height: 2px;
+    background: var(--black);
+    flex-shrink: 0;
+    margin: 4px 0 6px;
+  }
+
+  /* Stopping pattern — single column with left border track */
+  .esc-stops-wrap {
+    flex: 1;
+    overflow: hidden;
+    min-height: 0;
+  }
+
+  .esc-stops {
+    border-left: 5px solid var(--black);
+    margin-left: 8px;
+    height: 100%;
+    overflow: hidden;
+  }
+
+  .esc-stop-row {
+    display: flex;
+    align-items: center;
+    min-height: 30px;
+    padding-left: 14px;
+  }
+
+  .esc-stop-name {
+    font-family: 'Inter', sans-serif;
+    font-size: 22px;
+    font-weight: 400;
+    color: var(--black);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .esc-stop-row.is-current .esc-stop-name {
+    background: var(--black);
+    color: var(--white);
+    padding: 1px 8px;
+    font-weight: 700;
+  }
+
+  /* Express stops: track line continues but name is subdued */
+  .esc-stop-row.is-express .esc-stop-name {
+    color: var(--gray-50, #999);
+    font-style: italic;
+  }
+
+  /* Following departures footer */
+  .esc-following {
+    flex-shrink: 0;
+    border-top: 2px solid var(--black);
+    padding-top: 4px;
+    margin-top: 6px;
+  }
+
+  .esc-dep-row {
+    display: flex;
+    align-items: center;
+    padding: 9px 0 9px 14px;
+    border-left: 5px solid var(--black);
+    margin-left: 8px;
+    border-bottom: 1px solid var(--gray-65, #ccc);
+    gap: 10px;
+  }
+
+  .esc-dep-row:last-child { border-bottom: none; }
+
+  .esc-dep-time {
+    font-family: 'Inter', sans-serif;
+    font-size: 15px;
+    color: var(--gray-25, #555);
+    flex-shrink: 0;
+    width: 68px;
+  }
+
+  .esc-dep-dest {
+    font-family: 'Inter', sans-serif;
+    font-size: 18px;
+    font-weight: 600;
+    flex: 1;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .esc-dep-plat {
+    background: var(--black);
+    color: var(--white);
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    padding: 3px 8px;
+    flex-shrink: 0;
+  }
+
+  .esc-dep-badge {
+    background: var(--black);
+    color: var(--white);
+    padding: 4px 12px;
+    font-family: 'Inter', sans-serif;
+    font-size: 15px;
+    font-weight: 500;
+    white-space: nowrap;
+    flex-shrink: 0;
+    min-width: 68px;
+    text-align: center;
   }
 </style>
 
 <div class="layout layout--col layout--stretch-x">
-  {% if departures %}
-  <div class="pid-header">
-    <div class="pid-header-row">
-      <div class="pid-header-info">
-        <div class="pid-dest">{{ departures[0].destination }}</div>
-        <div class="pid-meta">{% if departures[0].train_type == "Ltd Express" %}Ltd Express{% else %}Stops All Stations{% endif %} · Platform {{ departures[0].platform }}</div>
-      </div>
-      {% set t = departures[0].estimated_time.split(' ') %}
-      <div class="pid-countdown">
-        <span class="time">{{ t[0] }}</span>
-        <span class="period">{{ t[1] }}</span>
+
+  <!-- ══ LANDSCAPE LAYOUT ══════════════════════════════════════════════════ -->
+  <div class="pid-ls" style="display:flex;flex-direction:column;flex:1;width:100%;min-height:0;">
+    {% if departures %}
+
+    <div class="pid-header">
+      <div class="pid-header-row">
+        <div class="pid-header-info">
+          <div class="pid-dest">{{ departures[0].destination }}</div>
+          <div class="pid-meta">{% if departures[0].train_type == "Ltd Express" %}Ltd Express{% else %}Stops All Stations{% endif %} · Platform {{ departures[0].platform }}</div>
+        </div>
+        {% set t = departures[0].estimated_time.split(' ') %}
+        <div class="pid-countdown">
+          <span class="time">{{ t[0] }}</span>
+          <span class="period">{{ t[1] }}</span>
+        </div>
       </div>
     </div>
-  </div>
-  {% endif %}
 
-  {% if stop_columns %}
-  <div class="stopping-pattern">
-    {% for column in stop_columns %}
-    <div class="stop-col">
-      <div class="stop-track-cap"></div>
-      {% for stop in column %}
-      <div class="stop-row {% if stop.is_current %}is-current{% elif stop.is_express %}is-express{% endif %}">
-        <div class="stop-track">
-          <div class="stop-track-line"></div>
-          <div class="stop-track-dot"></div>
+    {% if stop_columns %}
+    <div class="stopping-pattern">
+      {% for column in stop_columns %}
+      <div class="stop-col">
+        <div class="stop-track-cap"></div>
+        {% for stop in column %}
+        <div class="stop-row {% if stop.is_current %}is-current{% elif stop.is_express %}is-express{% endif %}">
+          <div class="stop-track">
+            <div class="stop-track-line"></div>
+            <div class="stop-track-dot"></div>
+          </div>
+          <span class="stop-name">{{ stop.name }}</span>
         </div>
-        <span class="stop-name">{{ stop.name }}</span>
+        {% endfor %}
+        <div class="stop-track-cap"></div>
       </div>
       {% endfor %}
-      <div class="stop-track-cap"></div>
     </div>
-    {% endfor %}
-  </div>
-  {% endif %}
+    {% endif %}
 
-  {% if departures|length > 1 %}
-  <div style="overflow:hidden;width:100%;flex:1;">
-    <table class="pid-table">
-      <thead>
-        <tr>
-          <th>Time</th>
-          <th>Destination</th>
-          <th>Type</th>
-          <th>Plat</th>
-          <th>Departs</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for dep in departures[1:] %}
-        <tr{% if loop.index >= 4 %} class="dep-extra"{% endif %}>
-          <td>{{ dep.scheduled_time }}</td>
-          <td>{{ dep.destination }}</td>
-          <td>{{ dep.train_type }}</td>
-          <td>{{ dep.platform }}</td>
-          <td><span class="pid-badge">{{ dep.estimated_time }}</span></td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+    {% if departures|length > 1 %}
+    <div style="overflow:hidden;width:100%;flex:1;">
+      <table class="pid-table">
+        <thead>
+          <tr>
+            <th>Time</th>
+            <th>Destination</th>
+            <th>Type</th>
+            <th>Plat</th>
+            <th>Departs</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for dep in departures[1:] %}
+          <tr{% if loop.index >= 4 %} class="dep-extra"{% endif %}>
+            <td>{{ dep.scheduled_time }}</td>
+            <td>{{ dep.destination }}</td>
+            <td>{{ dep.train_type }}</td>
+            <td>{{ dep.platform }}</td>
+            <td><span class="pid-badge">{{ dep.estimated_time }}</span></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% endif %}
+
+    {% else %}
+    <div class="pid-empty">
+      <span class="pid-empty-msg">No departures available</span>
+      <span class="pid-empty-sub">Updated {{ updated_at }}</span>
+    </div>
+    {% endif %}
   </div>
-  {% endif %}
+
+  <!-- ══ PORTRAIT / ESCALATOR LAYOUT ══════════════════════════════════════ -->
+  <div class="pid-pt">
+    {% if departures %}
+
+    <div class="esc-header">
+      <span class="esc-sched">{{ departures[0].scheduled_time }}</span>
+      <div class="esc-dest-row">
+        <div class="esc-dest">{{ departures[0].destination }}</div>
+        <div class="esc-plat-stack">
+          <div class="esc-plat-box">{{ departures[0].platform }}</div>
+          {% set t = departures[0].estimated_time.split(' ') %}
+          <div class="esc-countdown">
+            <span class="time">{{ t[0] }}</span>
+            <span class="period">{{ t[1] }}</span>
+          </div>
+        </div>
+      </div>
+      <div class="esc-type">{% if departures[0].train_type == "Ltd Express" %}Ltd Express{% else %}Stops All Stations{% endif %}</div>
+    </div>
+
+    <div class="esc-divider"></div>
+
+    {% if stop_columns %}
+    <div class="esc-stops-wrap">
+      <div class="esc-stops">
+        {% for col in stop_columns %}{% for stop in col %}
+        <div class="esc-stop-row{% if stop.is_current %} is-current{% elif stop.is_express %} is-express{% endif %}">
+          <span class="esc-stop-name">{{ stop.name }}</span>
+        </div>
+        {% endfor %}{% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+    {% if departures|length > 1 %}
+    <div class="esc-following">
+      {% for dep in departures[1:] %}
+      <div class="esc-dep-row">
+        <span class="esc-dep-time">{{ dep.scheduled_time }}</span>
+        <span class="esc-dep-dest">{{ dep.destination }}</span>
+        <span class="esc-dep-plat">{{ dep.platform }}</span>
+        <span class="esc-dep-badge">{{ dep.estimated_time }}</span>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    {% else %}
+    <div class="pid-empty">
+      <span class="pid-empty-msg">No departures available</span>
+      <span class="pid-empty-sub">Updated {{ updated_at }}</span>
+    </div>
+    {% endif %}
+  </div>
+
 </div>
 
 <div class="title_bar">

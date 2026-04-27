@@ -153,6 +153,7 @@
 
 <div class="layout layout--col layout--stretch-x">
   {% if departures %}
+
   <div class="pid-header">
     <div class="pid-header-row">
       <div class="pid-header-info">
@@ -191,6 +192,11 @@
     </table>
   </div>
   {% endif %}
+
+  {% else %}
+  <div style="display:flex;align-items:center;justify-content:center;flex:1;">
+    <span style="font-family:'Inter',sans-serif;font-size:13px;color:var(--gray-25,#555);">No departures</span>
+  </div>
   {% endif %}
 </div>
 
