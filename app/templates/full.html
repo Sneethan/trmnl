@@ -1,5 +1,4 @@
 <style>
-  /* PID-specific styles that extend the TRMNL framework */
   .pid-header {
     border-top: 5px solid var(--black);
     padding: 14px 0 10px;
@@ -131,12 +130,10 @@
     padding-right: 4px;
   }
 
-  /* Express stops */
   .stop-row.is-express .stop-track-line { background: var(--gray-60, #bbb); }
   .stop-row.is-express .stop-track-dot { background: var(--gray-75, #f2f2f2); border: 2px solid var(--gray-60, #bbb); }
   .stop-row.is-express .stop-name { color: var(--gray-50, #999); }
 
-  /* Current stop */
   .stop-row.is-current { background: var(--gray-25, #555); }
   .stop-row.is-current .stop-track-line { background: var(--white); }
   .stop-row.is-current .stop-track-dot { background: var(--white); }
@@ -160,9 +157,7 @@
     border-bottom: 2px solid var(--gray-15, #333);
   }
 
-  .pid-table th:last-child {
-    text-align: right;
-  }
+  .pid-table th:last-child { text-align: right; }
 
   .pid-table td {
     font-family: 'Inter', sans-serif;
@@ -174,9 +169,7 @@
     vertical-align: middle;
   }
 
-  .pid-table td:last-child {
-    text-align: right;
-  }
+  .pid-table td:last-child { text-align: right; }
 
   .pid-badge {
     background: var(--black);
@@ -187,6 +180,79 @@
     font-weight: 500;
     display: inline-block;
     white-space: nowrap;
+  }
+
+  /* Extra rows only visible on lg screens */
+  tr.dep-extra { display: none; }
+
+  /* ── TRMNL V2/X (lg, 1024px+) ─────────────────────────────────────────── */
+  .screen--lg .pid-header {
+    border-top-width: 7px;
+    padding: 20px 0 14px;
+  }
+
+  .screen--lg .pid-dest {
+    font-size: 64px;
+    letter-spacing: -1.5px;
+  }
+
+  .screen--lg .pid-meta {
+    font-size: 23px;
+    margin-top: 6px;
+  }
+
+  .screen--lg .pid-countdown {
+    padding: 13px 30px;
+  }
+
+  .screen--lg .pid-countdown .time {
+    font-size: 46px;
+  }
+
+  .screen--lg .pid-countdown .period {
+    font-size: 21px;
+    margin-top: 6px;
+  }
+
+  .screen--lg .stop-row {
+    min-height: 27px;
+  }
+
+  .screen--lg .stop-track {
+    width: 34px;
+  }
+
+  .screen--lg .stop-track-cap {
+    height: 10px;
+    margin-left: 16px;
+  }
+
+  .screen--lg .stop-track-dot {
+    width: 10px;
+    height: 10px;
+  }
+
+  .screen--lg .stop-name {
+    font-size: 16px;
+  }
+
+  .screen--lg .pid-table th {
+    font-size: 13px;
+    padding: 10px;
+  }
+
+  .screen--lg .pid-table td {
+    font-size: 21px;
+    padding: 13px 10px;
+  }
+
+  .screen--lg .pid-badge {
+    font-size: 19px;
+    padding: 5px 16px;
+  }
+
+  .screen--lg tr.dep-extra {
+    display: table-row;
   }
 </style>
 
@@ -241,7 +307,7 @@
       </thead>
       <tbody>
         {% for dep in departures[1:] %}
-        <tr>
+        <tr{% if loop.index >= 4 %} class="dep-extra"{% endif %}>
           <td>{{ dep.scheduled_time }}</td>
           <td>{{ dep.destination }}</td>
           <td>{{ dep.train_type }}</td>

@@ -40,7 +40,7 @@ async def fetch_departure_data(
     departures = await ptv.get_departures(
         stop_id=stop_id,
         route_type=0,
-        max_results=4,
+        max_results=6,
         platform_numbers=platform_numbers,
     )
 

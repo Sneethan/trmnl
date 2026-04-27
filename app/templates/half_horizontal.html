@@ -18,7 +18,6 @@
     min-width: 0;
   }
 
-  /* Next departure header */
   .hh-next {
     display: flex;
     align-items: center;
@@ -186,6 +185,49 @@
     font-weight: 700;
     line-height: 1;
   }
+
+  /* Extra row only on lg */
+  .hh-dep-row.dep-extra { display: none; }
+
+  /* ── TRMNL V2/X (lg, 1024px+) ─────────────────────────────────────────── */
+  .screen--lg .hh-dest {
+    font-size: 32px;
+  }
+
+  .screen--lg .hh-meta {
+    font-size: 14px;
+    margin-top: 3px;
+  }
+
+  .screen--lg .hh-stop {
+    font-size: 13px;
+    line-height: 1.6;
+  }
+
+  .screen--lg .hh-dep-dest {
+    font-size: 17px;
+  }
+
+  .screen--lg .hh-dep-time {
+    font-size: 13px;
+  }
+
+  .screen--lg .hh-dep-badge {
+    font-size: 14px;
+    padding: 3px 10px;
+  }
+
+  .screen--lg .hh-dep-type {
+    font-size: 12px;
+  }
+
+  .screen--lg .hh-clock-time {
+    font-size: 28px;
+  }
+
+  .screen--lg .hh-dep-row.dep-extra {
+    display: flex;
+  }
 </style>
 
 <div class="layout layout--col layout--stretch-x">
@@ -219,8 +261,8 @@
     <!-- RIGHT: following departures + clock -->
     <div class="hh-right">
       <div class="hh-following">
-        {% for dep in departures[1:3] %}
-        <div class="hh-dep-row">
+        {% for dep in departures[1:] %}
+        <div class="hh-dep-row{% if loop.index >= 3 %} dep-extra{% endif %}">
           <div class="hh-dep-top">
             <span class="hh-dep-time">{{ dep.scheduled_time }}</span>
             <span class="hh-dep-dest">{{ dep.destination }}</span>

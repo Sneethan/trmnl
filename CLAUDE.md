@@ -80,17 +80,35 @@ SQLite via aiosqlite. Single `users` table stores per-user: access_token, stop_i
 
 ### Templates
 
-Four TRMNL layout variants in `app/templates/`: `full.html` (800x480), `half_horizontal.html` (800x240), `half_vertical.html` (400x480), `quadrant.html` (400x240). Plus `manage.html` for the settings page.
+Four TRMNL layout variants in `app/templates/`: `full.html` (800x480), `half_horizontal.html` (800x240), `half_vertical.html` (400x480), `quadrant.html` (400x240). `quadrant_stops.html` is an alternate quadrant layout focused on the stopping pattern. Plus `manage.html` for the settings page.
 
 Template variables: `departures` (list of dicts with destination, scheduled_time, platform, train_type, is_express), `stop_columns` (4 columns of 6 stops each with name, is_current, is_express), `station_name`, `updated_at`.
 
 ### Display Constraints
 
-- Resolution: 800x480 pixels (TRMNL OG)
-- Colors: Black, white, and 2 grays only (2-bit grayscale)
+- Resolution: 800x480 pixels (TRMNL OG), 1024px+ (TRMNL V2/X)
+- Colors: Black, white, and 2 grays only (2-bit grayscale on OG); 16-shade grayscale on TRMNL V2/X (4-bit)
 - Font: Inter family
 - Shows scheduled departure times (e.g., "9:28 am") rather than countdown minutes — better for stale e-ink data
 - Stopping pattern uses `.current` (highlighted) and `.express` (grayed) CSS classes
+
+### TRMNL Framework v3 Responsive System
+
+Templates use custom CSS `<style>` blocks. The TRMNL runtime applies device classes to the outer `.screen` element, which our CSS can target as ancestors:
+
+| Selector | Meaning |
+|----------|---------|
+| `.screen--lg` | TRMNL V2/X, min-width 1024px |
+| `.screen--md` | TRMNL OG/OG V2, min-width 800px |
+| `.screen--sm` | Kindle 2024, min-width 600px |
+| `.screen--4bit` | 16-shade grayscale (TRMNL V2/X) |
+| `.screen--2bit` | 4-shade grayscale (TRMNL OG V2) |
+| `.screen--1bit` | Monochrome (TRMNL OG) |
+| `.screen--portrait` | Portrait orientation |
+
+All templates include `.screen--lg` CSS overrides that scale up font sizes (~25-30%) for TRMNL V2/X. `full.html` and `half_horizontal.html` also mark rows 4+ as `dep-extra` (hidden by default, visible on `.screen--lg`) to show more departures on larger screens. We fetch 6 departures (`max_results=6`) so extra rows are always available.
+
+Gray names follow v3 convention: `gray-10` through `gray-75` (14 steps). Legacy `gray-1`–`gray-7` are deprecated.
 
 ### Per-User Caching
 
