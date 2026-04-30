@@ -62,7 +62,7 @@ PTV API → PTVClient.get_departures() + get_stopping_pattern()
 | `GET /install` | OAuth code exchange, redirects user back to TRMNL |
 | `POST /install/success` | TRMNL webhook: user installed, creates DB record |
 | `POST /uninstall` | TRMNL webhook: user removed, deletes DB record |
-| `GET /manage` | Per-user settings page (station, platforms, refresh interval) |
+| `GET /manage` | Per-user settings page (station and platforms) |
 | `POST /manage/save` | Save user settings to SQLite |
 | `GET /api/stations/search` | Station autocomplete for manage page |
 | `POST /refresh` | Manual trigger for push-mode refresh |
@@ -76,7 +76,7 @@ Every PTV API request requires HMAC-SHA1 signing (implemented in `ptv_client.py`
 
 ### Database (app/database.py)
 
-SQLite via aiosqlite. Single `users` table stores per-user: access_token, stop_id, station_name, platform_numbers, refresh_minutes, cached departure JSON, and cache timestamp. Migrations run on startup (adds columns idempotently).
+SQLite via aiosqlite. Single `users` table stores per-user: access_token, stop_id, station_name, platform_numbers, legacy refresh_minutes, cached departure JSON, and cache timestamp. Migrations run on startup (adds columns idempotently).
 
 ### Templates
 
@@ -122,7 +122,7 @@ All templates include a no-departures fallback state. The stopping pattern fetch
 
 ### Per-User Caching
 
-In public plugin mode, `_get_fresh_data()` checks if cached departure data is within the user's refresh window before fetching from PTV. This avoids redundant API calls when TRMNL requests markup more frequently than the user's configured refresh interval.
+In public plugin mode, TRMNL controls plugin refresh and device wake cadence. `_get_fresh_data()` uses only a short API coalescing cache before fetching from PTV again. Cached data expires at the earliest of `PUBLIC_CACHE_SECONDS`, the first visible departure's estimated UTC time plus `DEPARTURE_CACHE_GRACE_SECONDS`, or `NO_DEPARTURES_CACHE_SECONDS` when no departures are returned. Rendered markup includes a hidden `refresh_slot` so TRMNL's lazy rendering can detect intentionally refreshed payloads.
 
 ## Common Stop IDs
 

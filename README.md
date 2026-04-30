@@ -12,7 +12,7 @@ A Python/FastAPI backend that fetches Melbourne train departure data from the PT
 - Four layout sizes: full, half horizontal, half vertical, quadrant
 - Portrait/landscape orientation support
 - Two operating modes: push (single user) or public plugin (multi-user OAuth)
-- Per-user configurable station, platform filter, and refresh interval
+- Per-user configurable station and platform filter
 
 ---
 
@@ -78,6 +78,12 @@ PLATFORM_NUMBERS=              # Optional: comma-separated e.g. 1,2
 
 # Refresh interval (push mode)
 REFRESH_MINUTES=5
+
+# Public plugin cache guardrails
+PUBLIC_CACHE_SECONDS=60
+NO_DEPARTURES_CACHE_SECONDS=30
+DEPARTURE_CACHE_GRACE_SECONDS=60
+RENDER_FRESHNESS_SECONDS=60
 
 # SQLite database location
 DATABASE_PATH=./data/trmnl.db
@@ -189,7 +195,7 @@ Every PTV API request is HMAC-SHA1 signed:
 
 ### Per-User Caching
 
-In public plugin mode, `_get_fresh_data()` checks whether cached departure data is still within the user's refresh window before calling PTV. This avoids redundant API calls when TRMNL requests markup more frequently than the configured interval.
+In public plugin mode, TRMNL controls plugin refresh and device wake cadence. `_get_fresh_data()` therefore uses only a short API coalescing cache before calling PTV again. Cached data expires at the earliest of `PUBLIC_CACHE_SECONDS`, the first visible departure's estimated UTC time plus `DEPARTURE_CACHE_GRACE_SECONDS`, or `NO_DEPARTURES_CACHE_SECONDS` when no departures are returned. The rendered markup also includes a hidden `refresh_slot` so TRMNL's lazy rendering can detect an intentionally refreshed payload even when the same trains remain visible. Configure the actual plugin refresh rate in TRMNL.
 
 ---
 

@@ -257,15 +257,7 @@
           <p class="hint">Comma-separated. Leave blank for all platforms.</p>
         </div>
 
-        <div class="field">
-          <label for="refresh_minutes">Refresh every</label>
-          <select name="refresh_minutes" id="refresh_minutes">
-            {% for mins in [5, 10, 15, 30, 60] %}
-            <option value="{{ mins }}" {% if refresh_minutes == mins %}selected{% endif %}>{{ mins }} minutes</option>
-            {% endfor %}
-          </select>
-          <p class="hint">How often your display fetches new departure times.</p>
-        </div>
+        <input type="hidden" name="refresh_minutes" value="{{ refresh_minutes or 5 }}">
 
         <div class="btn-row">
           {% if mode == 'setup' %}

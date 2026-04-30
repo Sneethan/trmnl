@@ -130,8 +130,7 @@ async def update_user_settings(
 
 
 async def set_cached_departures(uuid: str, data: dict) -> None:
-    """Persist a fresh departure payload against the user so it can be reused
-    within their chosen refresh window."""
+    """Persist a fresh departure payload against the user for short cache reuse."""
     now = datetime.now(timezone.utc).isoformat()
     db = await _get_db()
     try:

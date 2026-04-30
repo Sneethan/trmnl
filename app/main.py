@@ -1,7 +1,7 @@
 import json
 import os
 from contextlib import asynccontextmanager
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from urllib.parse import quote
 from zoneinfo import ZoneInfo
 
@@ -17,6 +17,7 @@ from .ptv_client import PTVClient
 from .trmnl_client import TRMNLClient
 
 scheduler = AsyncIOScheduler()
+MELBOURNE_TZ = ZoneInfo("Australia/Melbourne")
 
 # Pending settings from setup page, keyed by access_token.
 # Applied when the /install/success webhook arrives.
@@ -28,6 +29,83 @@ jinja_env = jinja2.Environment(
     loader=jinja2.FileSystemLoader(_template_dir),
     autoescape=False,
 )
+
+
+def _clamped_seconds(value: int | None, default: int) -> int:
+    if value is None:
+        return default
+    return max(0, value)
+
+
+def _parse_instant(raw: str | None) -> datetime | None:
+    if not raw:
+        return None
+    try:
+        parsed = datetime.fromisoformat(raw.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=timezone.utc)
+    return parsed.astimezone(timezone.utc)
+
+
+def _cache_expires_at(data: dict, fetched_at: datetime) -> datetime:
+    """Return the earliest time cached transit data must be considered stale."""
+    candidates = [
+        fetched_at + timedelta(seconds=_clamped_seconds(settings.public_cache_seconds, 60)),
+    ]
+
+    departures = data.get("departures") or []
+    if departures:
+        first_departure = departures[0]
+        departure_at = _parse_instant(
+            first_departure.get("estimated_departure_utc")
+            or first_departure.get("scheduled_departure_utc")
+        )
+        if departure_at is not None:
+            grace = _clamped_seconds(settings.departure_cache_grace_seconds, 60)
+            candidates.append(departure_at + timedelta(seconds=grace))
+    else:
+        no_departures_ttl = _clamped_seconds(settings.no_departures_cache_seconds, 30)
+        candidates.append(fetched_at + timedelta(seconds=no_departures_ttl))
+
+    return min(candidates)
+
+
+def _should_force_refresh(request: Request, form=None) -> bool:
+    truthy = {"1", "true", "yes", "on"}
+    keys = ("force_refresh", "refresh", "force")
+
+    for key in keys:
+        raw = request.query_params.get(key)
+        if raw is not None and str(raw).strip().lower() in truthy:
+            return True
+
+    for key in ("x-trmnl-force-refresh", "x-force-refresh"):
+        raw = request.headers.get(key)
+        if raw is not None and str(raw).strip().lower() in truthy:
+            return True
+
+    if form is not None:
+        for key in keys:
+            raw = form.get(key)
+            if raw is not None and str(raw).strip().lower() in truthy:
+                return True
+
+    return False
+
+
+def _build_render_context(data: dict) -> dict:
+    """Attach render metadata without persisting it into the PTV cache."""
+    now_utc = datetime.now(timezone.utc)
+    freshness_seconds = _clamped_seconds(settings.render_freshness_seconds, 60) or 1
+    render_slot = int(now_utc.timestamp() // freshness_seconds)
+    rendered_at_utc = datetime.fromtimestamp(render_slot * freshness_seconds, tz=timezone.utc)
+    context = dict(data)
+    context["rendered_at_utc"] = rendered_at_utc.isoformat()
+    context["rendered_at"] = rendered_at_utc.astimezone(MELBOURNE_TZ).strftime("%I:%M %p").lstrip("0").lower()
+    context["refresh_slot"] = render_slot
+    return context
 
 
 async def fetch_departure_data(
@@ -68,6 +146,8 @@ async def fetch_departure_data(
                 "destination": d["destination"],
                 "scheduled_time": d["scheduled_time"],
                 "estimated_time": d["estimated_time"],
+                "scheduled_departure_utc": d["scheduled_departure_utc"],
+                "estimated_departure_utc": d["estimated_departure_utc"],
                 "platform": d["platform"],
                 "is_express": d["is_express"],
                 "train_type": d["train_type"],
@@ -75,7 +155,7 @@ async def fetch_departure_data(
             for d in departures
         ],
         "stop_columns": stop_columns,
-        "updated_at": datetime.now(timezone.utc).astimezone(ZoneInfo("Australia/Melbourne")).strftime("%I:%M %p").lstrip("0").lower(),
+        "updated_at": datetime.now(timezone.utc).astimezone(MELBOURNE_TZ).strftime("%I:%M %p").lstrip("0").lower(),
     }
 
 
@@ -85,21 +165,23 @@ def _parse_platforms(raw: str | None) -> list[int] | None:
     return [int(p.strip()) for p in raw.split(",") if p.strip()]
 
 
-async def _get_fresh_data(user: dict) -> dict:
-    """Return this user's departure data, using the DB cache when it is still
-    within their chosen refresh window and fetching from PTV otherwise."""
-    refresh_minutes = user.get("refresh_minutes") or 5
+async def _get_fresh_data(user: dict, force_refresh: bool = False) -> dict:
+    """Return this user's departure data, using the DB cache only while the
+    cached payload is still valid for the visible transit state."""
     cache_updated_at = user.get("cache_updated_at")
 
-    if cache_updated_at:
-        last_fetch = datetime.fromisoformat(cache_updated_at)
-        if last_fetch.tzinfo is None:
-            last_fetch = last_fetch.replace(tzinfo=timezone.utc)
-        age_seconds = (datetime.now(timezone.utc) - last_fetch).total_seconds()
-        if age_seconds < refresh_minutes * 60:
-            cached_json = user.get("cached_departures")
-            if cached_json:
-                return json.loads(cached_json)
+    if not force_refresh and cache_updated_at:
+        last_fetch = _parse_instant(cache_updated_at)
+        cached_json = user.get("cached_departures")
+        if last_fetch is not None and cached_json:
+            try:
+                cached_data = json.loads(cached_json)
+            except (TypeError, json.JSONDecodeError):
+                cached_data = None
+            if cached_data is not None:
+                now = datetime.now(timezone.utc)
+                if now < _cache_expires_at(cached_data, last_fetch):
+                    return cached_data
 
     # Cache miss or expired — fetch a fresh batch from PTV.
     platform_numbers = _parse_platforms(user.get("platform_numbers"))
@@ -341,7 +423,9 @@ async def trmnl_markup(request: Request):
     if not user:
         return JSONResponse({"error": "User not found"}, status_code=404)
 
-    data = await _get_fresh_data(user)
+    data = _build_render_context(
+        await _get_fresh_data(user, force_refresh=_should_force_refresh(request, form))
+    )
 
     # TRMNL expects these exact keys
     layout_map = {
@@ -356,7 +440,14 @@ async def trmnl_markup(request: Request):
         template = jinja_env.get_template(f"{template_name}.html")
         result[response_key] = template.render(**data)
 
-    return result
+    return JSONResponse(
+        result,
+        headers={
+            "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
+            "Pragma": "no-cache",
+            "Expires": "0",
+        },
+    )
 
 
 # ── Settings page ────────────────────────────────────────────────────────────

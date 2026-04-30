@@ -87,6 +87,8 @@ class PTVClient:
                 "destination": run.get("destination_name", direction.get("direction_name", "Unknown")),
                 "scheduled_time": scheduled.astimezone(MELBOURNE_TZ).strftime("%I:%M %p").lstrip("0").lower(),
                 "estimated_time": departure_time.astimezone(MELBOURNE_TZ).strftime("%I:%M %p").lstrip("0").lower(),
+                "scheduled_departure_utc": scheduled.astimezone(timezone.utc).isoformat(),
+                "estimated_departure_utc": departure_time.astimezone(timezone.utc).isoformat(),
                 "minutes_until": max(0, minutes_until),
                 "platform": dep.get("platform_number", ""),
                 "is_express": run.get("express_stop_count", 0) > 0,

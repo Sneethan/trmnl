@@ -14,6 +14,10 @@ class Settings(BaseSettings):
     station_name: str = "Melbourne Central"
     platform_numbers: str | None = None  # Comma-separated, e.g. "1,2"
     refresh_minutes: int = 5
+    public_cache_seconds: int = 60
+    no_departures_cache_seconds: int = 30
+    departure_cache_grace_seconds: int = 60
+    render_freshness_seconds: int = 60
 
 
 settings = Settings()
