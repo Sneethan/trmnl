@@ -170,12 +170,12 @@
   .pid-ls .stop-row.is-current .stop-name { color: var(--white); }
 
   /* Table (landscape) */
-  .pid-ls .pid-table {
+  .pid-ls .table {
     width: 100%;
     border-collapse: collapse;
   }
 
-  .pid-ls .pid-table th {
+  .pid-ls .table th {
     font-family: 'Inter', sans-serif;
     text-align: left;
     padding: 8px;
@@ -187,9 +187,9 @@
     border-bottom: 2px solid var(--gray-15, #333);
   }
 
-  .pid-ls .pid-table th:last-child { text-align: right; }
+  .pid-ls .table th:last-child { text-align: right; }
 
-  .pid-ls .pid-table td {
+  .pid-ls .table td {
     font-family: 'Inter', sans-serif;
     padding: 10px 8px;
     font-size: 17px;
@@ -199,7 +199,7 @@
     vertical-align: middle;
   }
 
-  .pid-ls .pid-table td:last-child { text-align: right; }
+  .pid-ls .table td:last-child { text-align: right; }
 
   .pid-ls .pid-badge {
     background: var(--black);
@@ -211,8 +211,6 @@
     display: inline-block;
     white-space: nowrap;
   }
-
-  tr.dep-extra { display: none; }
 
   /* ── Landscape: TRMNL V2/X (lg) ─────────────────────────────────────── */
   .screen--lg .pid-ls .pid-header {
@@ -232,11 +230,9 @@
   .screen--lg .pid-ls .stop-track-dot { width: 10px; height: 10px; }
   .screen--lg .pid-ls .stop-name { font-size: 16px; }
 
-  .screen--lg .pid-ls .pid-table th { font-size: 13px; padding: 10px; }
-  .screen--lg .pid-ls .pid-table td { font-size: 21px; padding: 13px 10px; }
+  .screen--lg .pid-ls .table th { font-size: 13px; padding: 10px; }
+  .screen--lg .pid-ls .table td { font-size: 21px; padding: 13px 10px; }
   .screen--lg .pid-ls .pid-badge { font-size: 19px; padding: 5px 16px; }
-
-  .screen--lg tr.dep-extra { display: table-row; }
 
   /* ════════════════════════════════════════════════════════════════════════════
      PORTRAIT / ESCALATOR LAYOUT (TRMNL X portrait)
@@ -490,8 +486,8 @@
     {% endif %}
 
     {% if departures|length > 1 %}
-    <div style="overflow:hidden;width:100%;flex:1;">
-      <table class="pid-table">
+    <div style="width:100%;flex:1;min-height:0;">
+      <table class="table" data-table-limit="true" data-table-max-height="auto">
         <thead>
           <tr>
             <th>Time</th>
@@ -503,7 +499,7 @@
         </thead>
         <tbody>
           {% for dep in departures[1:] %}
-          <tr{% if loop.index >= 4 %} class="dep-extra"{% endif %}>
+          <tr>
             <td>{{ dep.scheduled_time }}</td>
             <td>{{ dep.destination }}</td>
             <td>{{ dep.train_type }}</td>

@@ -64,12 +64,12 @@
   }
 
   /* Table */
-  .pid-table {
+  .table {
     width: 100%;
     border-collapse: collapse;
   }
 
-  .pid-table th {
+  .table th {
     font-family: 'Inter', sans-serif;
     text-align: left;
     padding: 4px 5px;
@@ -81,9 +81,9 @@
     border-bottom: 1px solid var(--gray-15, #333);
   }
 
-  .pid-table th:last-child { text-align: right; }
+  .table th:last-child { text-align: right; }
 
-  .pid-table td {
+  .table td {
     font-family: 'Inter', sans-serif;
     padding: 5px;
     font-size: 12px;
@@ -93,7 +93,7 @@
     vertical-align: middle;
   }
 
-  .pid-table td:last-child { text-align: right; }
+  .table td:last-child { text-align: right; }
 
   .pid-badge {
     background: var(--black);
@@ -135,12 +135,12 @@
     margin-top: 3px;
   }
 
-  .screen--lg .pid-table th {
+  .screen--lg .table th {
     font-size: 11px;
     padding: 6px 7px;
   }
 
-  .screen--lg .pid-table td {
+  .screen--lg .table td {
     font-size: 15px;
     padding: 7px;
   }
@@ -170,8 +170,8 @@
   </div>
 
   {% if departures|length > 1 %}
-  <div style="overflow:hidden;width:100%;flex:1;">
-    <table class="pid-table">
+  <div style="width:100%;flex:1;min-height:0;">
+    <table class="table table--small" data-table-limit="true" data-table-max-height="auto">
       <thead>
         <tr>
           <th>Time</th>
