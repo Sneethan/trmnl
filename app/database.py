@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS users (
     plugin_setting_id INTEGER,
     stop_id INTEGER DEFAULT 19843,
     station_name TEXT DEFAULT 'Melbourne Central',
+    route_type INTEGER DEFAULT 0,
     platform_numbers TEXT,
     refresh_minutes INTEGER DEFAULT 5,
     cached_departures TEXT,
@@ -30,6 +31,7 @@ _MIGRATIONS = [
     "ALTER TABLE users ADD COLUMN refresh_minutes INTEGER DEFAULT 5",
     "ALTER TABLE users ADD COLUMN cached_departures TEXT",
     "ALTER TABLE users ADD COLUMN cache_updated_at TEXT",
+    "ALTER TABLE users ADD COLUMN route_type INTEGER DEFAULT 0",
 ]
 
 
@@ -112,6 +114,7 @@ async def update_user_settings(
     uuid: str,
     stop_id: int,
     station_name: str,
+    route_type: int = 0,
     platform_numbers: str | None = None,
     refresh_minutes: int = 5,
 ) -> dict | None:
@@ -119,9 +122,9 @@ async def update_user_settings(
     db = await _get_db()
     try:
         await db.execute(
-            """UPDATE users SET stop_id = ?, station_name = ?,
+            """UPDATE users SET stop_id = ?, station_name = ?, route_type = ?,
                platform_numbers = ?, refresh_minutes = ?, updated_at = ? WHERE uuid = ?""",
-            (stop_id, station_name, platform_numbers, refresh_minutes, now, uuid),
+            (stop_id, station_name, route_type, platform_numbers, refresh_minutes, now, uuid),
         )
         await db.commit()
     finally:

@@ -11,6 +11,7 @@ class Settings(BaseSettings):
     trmnl_client_secret: str | None = None
     database_path: str = "./data/trmnl.db"
     default_stop_id: int = 19843  # Melbourne Central
+    default_route_type: int = 0  # 0=Train, 3=V/Line
     station_name: str = "Melbourne Central"
     platform_numbers: str | None = None  # Comma-separated, e.g. "1,2"
     refresh_minutes: int = 5

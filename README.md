@@ -6,13 +6,13 @@ A Python/FastAPI backend that fetches Melbourne train departure data from the PT
 
 ## Features
 
-- Real-time train departures from any Melbourne metro station
+- Real-time train departures from Melbourne metro and V/Line stations
 - Stopping pattern display with current stop highlighted
 - Express stop indication
 - Four layout sizes: full, half horizontal, half vertical, quadrant
 - Portrait/landscape orientation support
 - Two operating modes: push (single user) or public plugin (multi-user OAuth)
-- Per-user configurable station and platform filter
+- Per-user configurable service type, station, and platform filter
 
 ---
 
@@ -73,6 +73,7 @@ TRMNL_CLIENT_SECRET=your_trmnl_client_secret
 
 # Station defaults
 DEFAULT_STOP_ID=19843          # Melbourne Central
+DEFAULT_ROUTE_TYPE=0           # 0=Train, 3=V/Line
 STATION_NAME=Melbourne Central
 PLATFORM_NUMBERS=              # Optional: comma-separated e.g. 1,2
 
@@ -127,7 +128,7 @@ The SQLite database is persisted in a named Docker volume (`trmnl-data`).
 | `POST` | `/trmnl/markup` | TRMNL requests rendered HTML for all layout sizes |
 | `GET` | `/manage` | Per-user settings page |
 | `POST` | `/manage/save` | Save user settings |
-| `GET` | `/api/stations/search` | Station autocomplete (`?q=flinders`) |
+| `GET` | `/api/stations/search` | Station autocomplete (`?q=flinders&route_type=0`) |
 
 ---
 
@@ -159,7 +160,14 @@ Four layout variants are rendered for each request:
 | Parliament | 19841 |
 | Richmond | 1162 |
 
-Use `/api/stations/search?q=<name>` to find any other station's stop ID.
+Use `/api/stations/search?q=<name>&route_type=<0|3>` to find any other Train or V/Line station's stop ID.
+
+## Route Types
+
+| Service | Route type |
+|---------|------------|
+| Train | 0 |
+| V/Line | 3 |
 
 ---
 
@@ -179,7 +187,7 @@ Use `/api/stations/search?q=<name>` to find any other station's stop ID.
 ## Architecture
 
 ```
-PTV API → PTVClient.get_departures() + get_stopping_pattern()
+PTV API → PTVClient.get_departures(route_type) + get_stopping_pattern(route_type)
   → fetch_departure_data() builds {departures, stop_columns, station_name, updated_at}
   → Cached in SQLite (public plugin mode)
   → Rendered via Jinja2 templates

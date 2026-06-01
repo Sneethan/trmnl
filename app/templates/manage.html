@@ -230,7 +230,7 @@
         </div>
         <div>
           <div class="current-label">Current station</div>
-          <div class="current-value">{{ station_name }}{% if platform_numbers %} <span style="font-weight:400;color:rgb(143 143 143);">Plat {{ platform_numbers }}</span>{% endif %}</div>
+          <div class="current-value">{{ station_name }} <span style="font-weight:400;color:rgb(143 143 143);">{{ 'V/Line' if route_type == 3 else 'Train' }}{% if platform_numbers %} &middot; Plat {{ platform_numbers }}{% endif %}</span></div>
         </div>
       </div>
       {% endif %}
@@ -244,6 +244,14 @@
         {% endif %}
         <input type="hidden" name="stop_id" id="stop_id" value="{{ stop_id }}">
         <input type="hidden" name="station_name" id="station_name_hidden" value="{{ station_name }}">
+
+        <div class="field">
+          <label for="route_type">Service type</label>
+          <select name="route_type" id="route_type">
+            <option value="0"{% if route_type != 3 %} selected{% endif %}>Train</option>
+            <option value="3"{% if route_type == 3 %} selected{% endif %}>V/Line</option>
+          </select>
+        </div>
 
         <div class="field">
           <label for="search">Search station</label>
@@ -279,6 +287,7 @@
     const resultsDiv = document.getElementById('results');
     const stopIdInput = document.getElementById('stop_id');
     const stationNameInput = document.getElementById('station_name_hidden');
+    const routeTypeSelect = document.getElementById('route_type');
     let debounceTimer;
 
     searchInput.addEventListener('input', () => {
@@ -290,7 +299,11 @@
 
     async function fetchStations(q) {
       try {
-        const res = await fetch('/api/stations/search?q=' + encodeURIComponent(q));
+        const params = new URLSearchParams({
+          q: q,
+          route_type: routeTypeSelect.value
+        });
+        const res = await fetch('/api/stations/search?' + params.toString());
         const data = await res.json();
         if (!data.stops || data.stops.length === 0) {
           resultsDiv.innerHTML = '<div class="search-result" style="color:#6666888;">No stations found</div>';

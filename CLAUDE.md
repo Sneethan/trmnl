@@ -31,6 +31,7 @@ TRMNL_WEBHOOK_URL=...               # Set for push mode only
 TRMNL_CLIENT_ID=...                 # Set for public plugin mode (OAuth)
 TRMNL_CLIENT_SECRET=...             # Set for public plugin mode (OAuth)
 DEFAULT_STOP_ID=19843               # Melbourne Central
+DEFAULT_ROUTE_TYPE=0                # 0=Train, 3=V/Line
 STATION_NAME=Melbourne Central
 PLATFORM_NUMBERS=1,2                # Optional: comma-separated platform filter
 REFRESH_MINUTES=5
@@ -47,7 +48,7 @@ DATABASE_PATH=./data/trmnl.db       # SQLite location
 ### Data Flow
 
 ```
-PTV API → PTVClient.get_departures() + get_stopping_pattern()
+PTV API → PTVClient.get_departures(route_type) + get_stopping_pattern(route_type)
   → fetch_departure_data() builds {departures, stop_columns, station_name, updated_at}
   → Cached in SQLite (public plugin mode)
   → Rendered via Jinja2 templates
@@ -76,7 +77,7 @@ Every PTV API request requires HMAC-SHA1 signing (implemented in `ptv_client.py`
 
 ### Database (app/database.py)
 
-SQLite via aiosqlite. Single `users` table stores per-user: access_token, stop_id, station_name, platform_numbers, legacy refresh_minutes, cached departure JSON, and cache timestamp. Migrations run on startup (adds columns idempotently).
+SQLite via aiosqlite. Single `users` table stores per-user: access_token, stop_id, station_name, route_type, platform_numbers, legacy refresh_minutes, cached departure JSON, and cache timestamp. Migrations run on startup (adds columns idempotently).
 
 ### Templates
 
@@ -139,9 +140,9 @@ In public plugin mode, TRMNL controls plugin refresh and device wake cadence. `_
 
 | Endpoint | Purpose |
 |----------|---------|
-| `/v3/departures/route_type/0/stop/{stop_id}` | Train departures |
-| `/v3/pattern/run/{run_ref}/route_type/0` | Stopping pattern for a run |
-| `/v3/stops/route/{route_id}/route_type/0` | All stops on a route |
+| `/v3/departures/route_type/{route_type}/stop/{stop_id}` | Train or V/Line departures |
+| `/v3/pattern/run/{run_ref}/route_type/{route_type}` | Stopping pattern for a run |
+| `/v3/stops/route/{route_id}/route_type/{route_type}` | All stops on a route |
 | `/v3/search/{term}` | Find stops by name |
 
 Route types: 0=Train, 1=Tram, 2=Bus, 3=V/Line, 4=Night Bus

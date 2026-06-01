@@ -8,7 +8,7 @@ from zoneinfo import ZoneInfo
 import httpx
 import jinja2
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from fastapi import FastAPI, Form, Query, Request
+from fastapi import FastAPI, Form, HTTPException, Query, Request
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 
 from . import database as db
@@ -18,6 +18,7 @@ from .trmnl_client import TRMNLClient
 
 scheduler = AsyncIOScheduler()
 MELBOURNE_TZ = ZoneInfo("Australia/Melbourne")
+SUPPORTED_ROUTE_TYPES = {0, 3}
 
 # Pending settings from setup page, keyed by access_token.
 # Applied when the /install/success webhook arrives.
@@ -108,16 +109,24 @@ def _build_render_context(data: dict) -> dict:
     return context
 
 
+def _validate_route_type(route_type: int) -> int:
+    if route_type not in SUPPORTED_ROUTE_TYPES:
+        raise HTTPException(status_code=400, detail="Unsupported route_type")
+    return route_type
+
+
 async def fetch_departure_data(
     stop_id: int,
+    route_type: int = 0,
     platform_numbers: list[int] | None = None,
 ) -> dict:
     """Fetch PTV departures + stopping pattern — shared by push mode and markup endpoint."""
+    route_type = _validate_route_type(route_type)
     ptv = PTVClient(settings.ptv_dev_id, settings.ptv_api_key)
 
     departures = await ptv.get_departures(
         stop_id=stop_id,
-        route_type=0,
+        route_type=route_type,
         max_results=6,
         platform_numbers=platform_numbers,
     )
@@ -128,6 +137,7 @@ async def fetch_departure_data(
             stops = await ptv.get_stopping_pattern(
                 run_ref=departures[0]["run_ref"],
                 current_stop_id=stop_id,
+                route_type=route_type,
             )
         except Exception:
             pass  # Degrade gracefully — departures still shown without pattern
@@ -169,6 +179,7 @@ async def _get_fresh_data(user: dict, force_refresh: bool = False) -> dict:
     """Return this user's departure data, using the DB cache only while the
     cached payload is still valid for the visible transit state."""
     cache_updated_at = user.get("cache_updated_at")
+    route_type = _validate_route_type(int(user.get("route_type") or 0))
 
     if not force_refresh and cache_updated_at:
         last_fetch = _parse_instant(cache_updated_at)
@@ -185,7 +196,11 @@ async def _get_fresh_data(user: dict, force_refresh: bool = False) -> dict:
 
     # Cache miss or expired — fetch a fresh batch from PTV.
     platform_numbers = _parse_platforms(user.get("platform_numbers"))
-    data = await fetch_departure_data(stop_id=user["stop_id"], platform_numbers=platform_numbers)
+    data = await fetch_departure_data(
+        stop_id=user["stop_id"],
+        route_type=route_type,
+        platform_numbers=platform_numbers,
+    )
     data["station_name"] = user["station_name"]
     await db.set_cached_departures(user["uuid"], data)
     return data
@@ -199,6 +214,7 @@ async def push_departures_to_trmnl():
 
     data = await fetch_departure_data(
         stop_id=settings.default_stop_id,
+        route_type=settings.default_route_type,
         platform_numbers=platform_numbers,
     )
     data["station_name"] = settings.station_name
@@ -297,6 +313,7 @@ async def setup_page(
         uuid="",
         station_name="Melbourne Central",
         stop_id=19843,
+        route_type=0,
         platform_numbers="",
         refresh_minutes=5,
         plugin_setting_id=None,
@@ -311,11 +328,13 @@ async def setup_save(
     token: str = Form(""),
     stop_id: int = Form(...),
     station_name: str = Form(...),
+    route_type: int = Form(0),
     platform_numbers: str = Form(""),
     refresh_minutes: int = Form(5),
 ):
     """Store pending settings and redirect to TRMNL callback to complete install."""
-    print(f"[setup/save] token_prefix={token[:12] if token else '(empty)'}..., stop_id={stop_id}, station={station_name}")
+    route_type = _validate_route_type(route_type)
+    print(f"[setup/save] token_prefix={token[:12] if token else '(empty)'}..., stop_id={stop_id}, route_type={route_type}, station={station_name}")
     if token:
         # Guard against unbounded growth
         if len(_pending_settings) > 1000:
@@ -323,6 +342,7 @@ async def setup_save(
         _pending_settings[token] = {
             "stop_id": stop_id,
             "station_name": station_name,
+            "route_type": route_type,
             "platform_numbers": platform_numbers.strip() or None,
             "refresh_minutes": max(1, refresh_minutes),
         }
@@ -373,6 +393,7 @@ async def install_success(request: Request):
             uuid=uuid,
             stop_id=pending["stop_id"],
             station_name=pending["station_name"],
+            route_type=pending.get("route_type", 0),
             platform_numbers=pending["platform_numbers"],
             refresh_minutes=pending["refresh_minutes"],
         )
@@ -469,6 +490,7 @@ async def manage_page(uuid: str = Query(...)):
         uuid=uuid,
         station_name=user["station_name"],
         stop_id=user["stop_id"],
+        route_type=user.get("route_type") or 0,
         platform_numbers=user.get("platform_numbers") or "",
         refresh_minutes=user.get("refresh_minutes") or 5,
         plugin_setting_id=user.get("plugin_setting_id"),
@@ -482,10 +504,12 @@ async def manage_save(
     uuid: str = Form(...),
     stop_id: int = Form(...),
     station_name: str = Form(...),
+    route_type: int = Form(0),
     platform_numbers: str = Form(""),
     refresh_minutes: int = Form(5),
 ):
-    print(f"[manage/save] uuid={uuid}, stop_id={stop_id}, station={station_name}")
+    route_type = _validate_route_type(route_type)
+    print(f"[manage/save] uuid={uuid}, stop_id={stop_id}, route_type={route_type}, station={station_name}")
     user = await db.get_user(uuid)
     if not user:
         return HTMLResponse("<h1>User not found</h1>", status_code=404)
@@ -495,6 +519,7 @@ async def manage_save(
         uuid=uuid,
         stop_id=stop_id,
         station_name=station_name,
+        route_type=route_type,
         platform_numbers=platforms,
         refresh_minutes=max(1, refresh_minutes),
     )
@@ -509,6 +534,7 @@ async def manage_save(
         uuid=uuid,
         station_name=user["station_name"],
         stop_id=user["stop_id"],
+        route_type=user.get("route_type") or 0,
         platform_numbers=user.get("platform_numbers") or "",
         refresh_minutes=user.get("refresh_minutes") or 5,
         plugin_setting_id=user.get("plugin_setting_id"),
@@ -520,9 +546,10 @@ async def manage_save(
 # ── Station search API ──────────────────────────────────────────────────────
 
 @app.get("/api/stations/search")
-async def search_stations(q: str = Query(..., min_length=2)):
+async def search_stations(q: str = Query(..., min_length=2), route_type: int = Query(0)):
+    route_type = _validate_route_type(route_type)
     ptv = PTVClient(settings.ptv_dev_id, settings.ptv_api_key)
-    stops = await ptv.search_stops(q, route_type=0)
+    stops = await ptv.search_stops(q, route_type=route_type)
     return {"stops": stops}
 
 
