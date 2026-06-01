@@ -230,7 +230,7 @@
         </div>
         <div>
           <div class="current-label">Current station</div>
-          <div class="current-value">{{ station_name }} <span style="font-weight:400;color:rgb(143 143 143);">{{ 'V/Line' if route_type == 3 else 'Train' }}{% if platform_numbers %} &middot; Plat {{ platform_numbers }}{% endif %}</span></div>
+          <div class="current-value">{{ station_name }} <span style="font-weight:400;color:rgb(143 143 143);">{{ 'V/Line' if route_type|string == '3' else 'Train' }}{% if platform_numbers %} &middot; Plat {{ platform_numbers }}{% endif %}</span></div>
         </div>
       </div>
       {% endif %}
@@ -248,8 +248,8 @@
         <div class="field">
           <label for="route_type">Service type</label>
           <select name="route_type" id="route_type">
-            <option value="0"{% if route_type != 3 %} selected{% endif %}>Train</option>
-            <option value="3"{% if route_type == 3 %} selected{% endif %}>V/Line</option>
+            <option value="0"{% if route_type|string != '3' %} selected{% endif %}>Train</option>
+            <option value="3"{% if route_type|string == '3' %} selected{% endif %}>V/Line</option>
           </select>
         </div>
 
@@ -289,6 +289,7 @@
     const stationNameInput = document.getElementById('station_name_hidden');
     const routeTypeSelect = document.getElementById('route_type');
     let debounceTimer;
+    let latestSearchId = 0;
 
     searchInput.addEventListener('input', () => {
       clearTimeout(debounceTimer);
@@ -297,14 +298,32 @@
       debounceTimer = setTimeout(() => fetchStations(q), 300);
     });
 
+    routeTypeSelect.addEventListener('change', () => {
+      stopIdInput.value = '';
+      stationNameInput.value = '';
+      resultsDiv.classList.remove('open');
+      resultsDiv.innerHTML = '';
+
+      const q = searchInput.value.trim();
+      if (q.length >= 2) {
+        clearTimeout(debounceTimer);
+        fetchStations(q);
+      }
+    });
+
     async function fetchStations(q) {
+      const searchId = ++latestSearchId;
+      const routeType = routeTypeSelect.value;
       try {
         const params = new URLSearchParams({
           q: q,
-          route_type: routeTypeSelect.value
+          route_type: routeType
         });
         const res = await fetch('/api/stations/search?' + params.toString());
         const data = await res.json();
+        if (searchId !== latestSearchId || routeType !== routeTypeSelect.value) {
+          return;
+        }
         if (!data.stops || data.stops.length === 0) {
           resultsDiv.innerHTML = '<div class="search-result" style="color:#6666888;">No stations found</div>';
         } else {
