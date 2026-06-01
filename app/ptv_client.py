@@ -11,7 +11,17 @@ MELBOURNE_TZ = ZoneInfo("Australia/Melbourne")
 
 
 def _clean_stop_name(name: str) -> str:
-    return re.sub(r"\s*\bStation\b\s*$", "", name, flags=re.IGNORECASE).strip()
+    return re.sub(r"\s*\b(?:Railway\s+Station|Station|Railway)\b\s*$", "", name, flags=re.IGNORECASE).strip()
+
+
+def _matches_search_term(stop_name: str, term: str) -> bool:
+    normalized_name = _clean_stop_name(stop_name).lower()
+    tokens = [t for t in re.split(r"\s+", term.lower().strip()) if t]
+    return all(token in normalized_name for token in tokens)
+
+
+def _is_railway_stop(stop_name: str) -> bool:
+    return bool(re.search(r"\b(?:Railway|Railway\s+Station)\b\s*$", stop_name, flags=re.IGNORECASE))
 
 
 class PTVClient:
@@ -150,9 +160,16 @@ class PTVClient:
             response.raise_for_status()
             data = response.json()
 
+        stops = [
+            s for s in data.get("stops", [])
+            if _matches_search_term(s.get("stop_name", ""), term)
+        ]
+        if route_type == 3:
+            stops = [s for s in stops if _is_railway_stop(s.get("stop_name", ""))]
+
         return [
             {"stop_id": s["stop_id"], "stop_name": _clean_stop_name(s["stop_name"])}
-            for s in data.get("stops", [])
+            for s in stops
         ]
 
     async def get_stopping_pattern(self, run_ref: str, current_stop_id: int, route_type: int = 0) -> list[dict]:

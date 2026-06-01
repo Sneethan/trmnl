@@ -122,6 +122,8 @@ async def fetch_departure_data(
 ) -> dict:
     """Fetch PTV departures + stopping pattern — shared by push mode and markup endpoint."""
     route_type = _validate_route_type(route_type)
+    if route_type == 3:
+        platform_numbers = None
     ptv = PTVClient(settings.ptv_dev_id, settings.ptv_api_key)
 
     departures = await ptv.get_departures(
@@ -334,6 +336,8 @@ async def setup_save(
 ):
     """Store pending settings and redirect to TRMNL callback to complete install."""
     route_type = _validate_route_type(route_type)
+    if route_type == 3:
+        platform_numbers = ""
     print(f"[setup/save] token_prefix={token[:12] if token else '(empty)'}..., stop_id={stop_id}, route_type={route_type}, station={station_name}")
     if token:
         # Guard against unbounded growth
@@ -509,6 +513,8 @@ async def manage_save(
     refresh_minutes: int = Form(5),
 ):
     route_type = _validate_route_type(route_type)
+    if route_type == 3:
+        platform_numbers = ""
     print(f"[manage/save] uuid={uuid}, stop_id={stop_id}, route_type={route_type}, station={station_name}")
     user = await db.get_user(uuid)
     if not user:
