@@ -93,14 +93,16 @@ class PTVClient:
             now = datetime.now(timezone.utc)
             minutes_until = int((departure_time - now).total_seconds() / 60)
 
+            destination = run.get("destination_name", direction.get("direction_name", "Unknown"))
+
             departures.append({
-                "destination": run.get("destination_name", direction.get("direction_name", "Unknown")),
+                "destination": _clean_stop_name(destination),
                 "scheduled_time": scheduled.astimezone(MELBOURNE_TZ).strftime("%I:%M %p").lstrip("0").lower(),
                 "estimated_time": departure_time.astimezone(MELBOURNE_TZ).strftime("%I:%M %p").lstrip("0").lower(),
                 "scheduled_departure_utc": scheduled.astimezone(timezone.utc).isoformat(),
                 "estimated_departure_utc": departure_time.astimezone(timezone.utc).isoformat(),
                 "minutes_until": max(0, minutes_until),
-                "platform": dep.get("platform_number", ""),
+                "platform": dep.get("platform_number") or "",
                 "is_express": run.get("express_stop_count", 0) > 0,
                 "train_type": "Ltd Express" if run.get("express_stop_count", 0) > 0 else "Stops All",
                 "run_ref": dep.get("run_ref", ""),

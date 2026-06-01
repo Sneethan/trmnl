@@ -77,11 +77,6 @@
     }
     input[type="text"]::placeholder { color: rgb(143 143 143); }
     input[type="text"]:focus { border-color: #f8654b; }
-    input[type="text"]:disabled {
-      opacity: 0.55;
-      cursor: not-allowed;
-    }
-
     select {
       width: 100%;
       padding: 10px 14px;
@@ -266,7 +261,7 @@
         <div class="field">
           <label for="platform_numbers">Platform filter</label>
           <input type="text" name="platform_numbers" id="platform_numbers" value="{{ platform_numbers or '' }}" placeholder="e.g. 1,2">
-          <p class="hint" id="platform_hint">Comma-separated. Leave blank for all platforms.</p>
+          <p class="hint">Comma-separated. Leave blank for all platforms.</p>
         </div>
 
         <input type="hidden" name="refresh_minutes" value="{{ refresh_minutes or 5 }}">
@@ -292,23 +287,8 @@
     const stopIdInput = document.getElementById('stop_id');
     const stationNameInput = document.getElementById('station_name_hidden');
     const routeTypeSelect = document.getElementById('route_type');
-    const platformInput = document.getElementById('platform_numbers');
-    const platformHint = document.getElementById('platform_hint');
     let debounceTimer;
     let latestSearchId = 0;
-
-    function updatePlatformState() {
-      const isVline = routeTypeSelect.value === '3';
-      platformInput.disabled = isVline;
-      platformHint.textContent = isVline
-        ? 'Platform filtering is unavailable for V/Line results.'
-        : 'Comma-separated. Leave blank for all platforms.';
-      if (isVline) {
-        platformInput.value = '';
-      }
-    }
-
-    updatePlatformState();
 
     searchInput.addEventListener('input', () => {
       clearTimeout(debounceTimer);
@@ -322,7 +302,6 @@
       stationNameInput.value = '';
       resultsDiv.classList.remove('open');
       resultsDiv.innerHTML = '';
-      updatePlatformState();
 
       const q = searchInput.value.trim();
       if (q.length >= 2) {

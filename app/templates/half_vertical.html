@@ -249,7 +249,7 @@
     <div class="pid-header-row">
       <div class="pid-header-info">
         <div class="pid-dest">{{ departures[0].destination }}</div>
-        <div class="pid-meta">{% if departures[0].train_type == "Ltd Express" %}Ltd Express{% else %}Stops All{% endif %} · Plat {{ departures[0].platform }}</div>
+        <div class="pid-meta">{% if departures[0].train_type == "Ltd Express" %}Ltd Express{% else %}Stops All{% endif %} · Plat {{ departures[0].platform_label }}</div>
       </div>
       {% set t = departures[0].estimated_time.split(' ') %}
       <div class="pid-countdown">
@@ -297,7 +297,7 @@
         <tr>
           <td>{{ dep.scheduled_time }}</td>
           <td>{{ dep.destination }}</td>
-          <td>{{ dep.platform }}</td>
+          <td>{{ dep.platform_label }}</td>
           <td><span class="pid-badge">{{ dep.estimated_time }}</span></td>
         </tr>
         {% endfor %}
